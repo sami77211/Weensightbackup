@@ -39,7 +39,6 @@
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		[key: string]: any;
 	}[] = [];
-
 	export let className = 'w-[32rem]';
 
 	let show = false;
@@ -50,7 +49,7 @@
 	let searchValue = '';
 	let ollamaVersion = null;
 
-	let selectedModelIdx = 0;
+	let selectedModelIdx = 1;
 
 	
 
@@ -201,8 +200,23 @@
 		}
 	};
 
+	function clickButtonAtIndex(index) {
+	const button = document.getElementById(`model-button-${index}`);
+	if (button) {
+		button.click(); // Déclenche le clic programmatique
+	} else {
+		console.error(`Button with index ${index} not found.`);
+	}
+}
+
+
 	onMount(async () => {
 		ollamaVersion = await getOllamaVersion(localStorage.token).catch((error) => false);
+		
+		selectedModel = items.find((item) => item.value === "llama3.2-vision:11b") ?? '';
+		console.log("Hello"+selectedModel);
+		
+		
 	});
 
 	const cancelModelPullHandler = async (model: string) => {
@@ -295,10 +309,11 @@
 							? 'bg-gray-100 dark:bg-gray-800 group-hover:bg-transparent'
 							: ''}"
 						data-arrow-selected={index === selectedModelIdx}
+						id={`model-button-${item.value}`}
 						on:click={() => {
-							value = item.value;
+							value = item.value;							
 							selectedModelIdx = index;
-
+							
 							show = false;
 						}}
 					>
@@ -390,7 +405,7 @@
 												fill="none"
 												viewBox="0 0 24 24"
 												stroke-width="1.5"
-												stroke="#168c77"
+												stroke="#006654"
 												class="w-4 h-4"
 											>
 												<path

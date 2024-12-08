@@ -37,9 +37,10 @@ const embed = true; // Set according to your needs
 	const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Mo (ajustez selon vos besoins)
 
 const submitHandler = async () => {
-    isLoading=true;
-	show = false;
+   
     if (inputFiles && inputFiles.length > 0) {
+		isLoading=true;
+		show = false;
         for (const file of inputFiles) {
             // Vérification de la taille du fichier
             if (file.size > MAX_FILE_SIZE) {
@@ -203,7 +204,7 @@ const submitHandler = async () => {
     height: 150px;
     border-radius: 50%;
     border: 5px solid rgba(22, 140, 119, 0.2);
-    border-top: 5px solid #168c77;
+    border-top: 5px solid #006654;
     animation: spin 2s linear infinite;
     background-color: white;
     display: flex;

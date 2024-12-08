@@ -458,7 +458,7 @@
 
 	.btn_record{
 		color: white;
-		background-color: #168c77;
+		background-color: #006654;
 	}
 
 	.backgroundvoice{

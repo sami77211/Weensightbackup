@@ -320,11 +320,15 @@
 
 						<td class=" px-3 py-2">
 							{dayjs(user.last_active_at * 1000).fromNow()}
+						
 						</td>
 
-						<td class=" px-3 py-2">
-							{dayjs(user.created_at * 1000).format($i18n.t('MMMM DD, YYYY'))}
+						<td class="px-3 py-2">
+							{#if user.created_at}
+								{dayjs(user.created_at * 1000).format('MMMM DD, YYYY h:mm A')}
+							{/if}
 						</td>
+						
 
 						<td class="px-3 py-2 text-right">
 							<div class="flex justify-end w-full">

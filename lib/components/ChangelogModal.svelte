@@ -14,6 +14,12 @@
 	export let show = false;
 
 	let changelog = null;
+	// clients.js
+export const clients = [
+  { id: 1, name: 'Star', visible: false },
+  { id: 2, name: 'Société Y', visible: false },
+  { id: 3, name: 'Société Z', visible: true },
+];
 
 	onMount(async () => {
 		const res = await getChangelog();

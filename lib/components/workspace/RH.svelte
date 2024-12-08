@@ -55,9 +55,13 @@
   qualifications: qualifications;
   mandatory_skills: string[]; // Compétences obligatoires
   optional_skills: string[]; // Compétences optionnelles (corrigé ici)
+  nb_profiles:number;
+  duration:string;
 }
 
-
+let Degree: string="";
+   let nb_profiles:number=0;
+   let duration: string="";
 let newMandatorySkill = '';
 let newOptionalSkill = '';
 let jobs: Job[] = [];
@@ -76,18 +80,6 @@ let poste_description='';
 
 let searchTerm = '';
 
-
-function onJobSelect(jobId) {
-  selectedJob = jobs.find((job) => job.id === jobId) || null;
-  setSelectedSkills(selectedJob);
-}
-
-function selectJob(job: Job) {
-  selectedJob = job;
-  Showjobinfo = true
-  setSelectedSkills(job);
-}
-
 function setSelectedSkills(job: Job) {
   selectedMandatorySkills = {};
   selectedOptionalSkills = {};
@@ -101,66 +93,6 @@ function setSelectedSkills(job: Job) {
   });
 }
 
-function addPosition() {
-  if (!newPosition.trim()) {
-    toast.error($i18n.t('Position cannot be empty'));
-    return;
-  }
-
-  const positionExists = jobs.some(
-    (job) => job.post_name.toLowerCase() === newPosition.toLowerCase()
-  );
-  
-  if (!positionExists) {
-    jobs = [...jobs, { post_name: newPosition, mandatory_skills: [], optional_skills: [] }];
-    toast.success($i18n.t('Position added successfully'));
-    newPosition = ''; // Clear input after adding
-  } else {
-    toast.error($i18n.t('Position already exists'));
-  }
-}
-
-function addMandatorySkill() {
-  if (!selectedJob) {
-    toast.error($i18n.t('Please select a job before adding skills'));
-    return;
-  }
-
-  if (!newMandatorySkill.trim()) {
-    toast.error($i18n.t('Skill cannot be empty'));
-    return;
-  }
-
-  if (!selectedJob.mandatory_skills.includes(newMandatorySkill)) {
-    selectedJob.mandatory_skills.push(newMandatorySkill);
-    selectedMandatorySkills[newMandatorySkill] = false; // Initialize selection state
-    toast.success($i18n.t('Mandatory skill added successfully'));
-    newMandatorySkill = ''; // Clear input
-  } else {
-    toast.error($i18n.t('Skill already exists in Compétences obligatoires'));
-  }
-}
-
-function addOptionalSkill() {
-  if (!selectedJob) {
-    toast.error($i18n.t('Please select a job before adding skills'));
-    return;
-  }
-
-  if (!newOptionalSkill.trim()) {
-    toast.error($i18n.t('Skill cannot be empty'));
-    return;
-  }
-
-  if (!selectedJob.optional_skills.includes(newOptionalSkill)) {
-    selectedJob.optional_skills.push(newOptionalSkill);
-    selectedOptionalSkills[newOptionalSkill] = false; // Initialize selection state
-    toast.success($i18n.t('Optional skill added successfully'));
-    newOptionalSkill = ''; // Clear input
-  } else {
-    toast.error($i18n.t('Skill already exists in Compétences optionnelles'));
-  }
-}
 
 
 let query = '';
@@ -250,6 +182,63 @@ function GoToChat(cv) {
 let messages: DocumentRH[] = [];
 let selectedMessage: DocumentRH | null = null;
 let error: string = '';
+async function fetchTopics() {
+try {
+const response = await fetch('http://localhost:3000/topics_sheet');
+if (!response.ok) throw new Error('Failed to fetch topics');
+const data = await response.json();
+jobs = data.map((item: any) => ({
+reference:item.reference,
+post_name: item.post_name,
+mandatory_skills: item.mandatory_skills,
+duration:item.duration,
+nb_profiles:item.nb_profiles,
+description: item.description, // Description du poste
+qualifications: item.qualifications, // Objet qualifications (ajusté ici)
+}));
+
+
+} catch (err) {
+error_job = err.message;
+infoMessage = `Error fetching topics: ${error}`;
+}
+}
+
+async function UpdateTopic(reference, postname, MandatorySkills, qualifications,nb_profiles,duration,description) {
+      try {
+  // Appelle l'API pour mettre à jour le job par référence
+  const response = await fetch('http://localhost:3000/updateTopicByReference', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+   reference:reference,
+   post_name: postname,
+   mandatory_skills: MandatorySkills,
+   duration:duration,
+   nb_profiles:nb_profiles,
+   description: description, // Description du poste
+   qualifications: qualifications, // Objet qualifications (ajusté ici)
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update topic');
+  }
+
+  const data = await response.json();
+  console.log(data);
+      // Appeler fetchTopics pour mettre à jour la liste affichée
+      await fetchTopics();
+      // Cacher le formulaire après la mise à jour
+  hideForm();
+  toast.success($i18n.t('Topic successfully updated.'));
+} catch (error) {
+  toast.error($i18n.t('Error updating Topic: ' + error.message));
+}
+}
+
 
 async function fetchDocuments(langchain_mode) {
   isLoading=true;
@@ -318,7 +307,7 @@ const uploadDoc = async (file: File, tags?: object) => {
 
 const getDocumentSizeInKo = async (nomDocument) => {
   try {
-    const response = await fetch(`http://localhost:3002/api/documents/name/${nomDocument}`, {
+    const response = await fetch(`http://localhost:3000/api/documents/name/${nomDocument}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -355,8 +344,6 @@ onMount(() => {
   
 
   fetchJobs();
-
- 
   fetchCategories();
  
   
@@ -379,7 +366,7 @@ let documentURL = '';
 
   const afficherCVEnPopup = async (nomDocument) => {
     try {
-      const response = await fetch(`http://localhost:3002/api/documents/name/${nomDocument}`, {
+      const response = await fetch(`http://localhost:3000/api/documents/name/${nomDocument}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -424,7 +411,7 @@ let documentURL = '';
 const deleteDocByName = async (nomDocument) => {
     try {
         console.log(`Attempting to delete document: ${nomDocument}`);
-        const response = await fetch(`http://localhost:3002/api/documents/name/${encodeURIComponent(nomDocument)}`, {
+        const response = await fetch(`http://localhost:3000/api/documents/name/${encodeURIComponent(nomDocument)}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -538,29 +525,29 @@ function sortByFirstName() {
 
 
 
-
 function downloadExcel() {
+ console.log(selectedDocuements);
+
   // Crée un nouveau classeur Excel
   const wb = XLSX.utils.book_new();
 
-  // Map les documents pour structurer les données
-  const jobData = selectedDocuements.map(doc => ({
-    'Nom': doc.nom,
-    'Prénom': doc.prenom,
-    'Nom du Document': doc.nomDocument,
-    'Adresse': doc.Adresse || 'N/A',
-    'Téléphone': doc.Téléphone || 'N/A',
-    'Email': doc.Email || 'N/A',
-    'Niveau': doc.Niveau || 'N/A',
-    'Score': doc.Score || 0,
-    'Rang': doc.Rank || 0,
-    'LinkedIn': doc.Linkedin || 'N/A',
-    'État': doc.état || 'N/A',
-    'GotoChat': doc.GotoChat ? 'Oui' : 'Non',
-    'Résumé du Profil': doc.recap?.partie1 || 'N/A',
-    'Points Forts du Profil': doc.recap?.partie2 || 'N/A'
-   // 'Points à Surveiller': doc.recap?.partie3?.map(p => p).join(', ') || 'N/A'
-  }));
+// Map les documents pour structurer les données
+const jobData = selectedDocuements.map(doc => ({
+  'Candidat': `${doc.nom || 'Non trouvé'} ${doc.prenom || 'Non trouvé'}`, // Combine le nom et prénom
+  'Nom du Document': doc.nomDocument || 'Non trouvé',
+  'Adresse': doc.Adresse || 'Non trouvé',
+  'Téléphone': doc.Téléphone || 'Non trouvé',
+  'Email': doc.Email || 'Non trouvé',
+  'Niveau': doc.Niveau || 'Non trouvé',
+  'Score': doc.score || 0,
+  'Rang': doc.Rank || 0,
+  'LinkedIn': doc.Linkedin || 'Non trouvé',
+  'État': doc.état || 'Non trouvé',
+  'GotoChat': doc.GotoChat ? 'Oui' : 'Non',
+  'Résumé du Profil': doc.recap?.partie1 || 'Non trouvé',
+  'Points Forts du Profil': doc.recap?.partie2 || 'Non trouvé',
+  'Points à Surveiller': doc.recap?.partie3 || 'Non trouvé'
+}));
 
   // Convertir les données mappées en une feuille de calcul Excel
   const ws = XLSX.utils.json_to_sheet(jobData);
@@ -584,6 +571,7 @@ function downloadExcel() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
 
 
 // Function to convert string to ArrayBuffer
@@ -716,7 +704,7 @@ let selectedPositionType='';
 
   async function fetchJobs() {
 try {
-const response = await fetch('http://localhost:3002/jobs_sheet');
+const response = await fetch('http://localhost:3000/jobs_sheet');
 if (!response.ok) throw new Error('Failed to fetch jobs');
 const data = await response.json();
 jobs = data.map((item: any) => ({
@@ -739,7 +727,7 @@ infoMessage = `Error fetching jobs: ${error}`;
 
 async function updateJobCollection() {
 try {
-const response = await fetch('http://localhost:3002/jobs_sheetUpdate', {
+const response = await fetch('http://localhost:3000/jobs_sheetUpdate', {
   method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
@@ -784,11 +772,65 @@ toast.error($i18n.t('Error updating job collection: ' + error.message));
         poste_description="";
         Degree="";
         experience="";
-        Portfolio=""
+        Portfolio="";
+        nb_profiles=0;
+        duration="";
+
 
     }
 
-    async function UpdatePosition(reference, postname, MandatorySkills, OptionalSkills, poste_description, Degree, experience, Portfolio) {
+    async function UpdatePosition(reference, postname, MandatorySkills, OptionalSkills, poste_description, degree, experience,nb_profiles,Portfolio,duration) {
+      if(selectedPositionType=="internship"){
+// Check if all fields are filled
+if (!degree.trim()||
+    !poste_description.trim()||
+    !postname.trim()||
+     MandatorySkills.length === 0 ||
+    !poste_description.trim()||
+     nb_profiles==0|| 
+    !duration.trim()) {
+  toast.error($i18n.t('Please fill all fields before updating a topic.'));
+  return;
+}
+
+        try {
+  // Appelle l'API pour mettre à jour le job par référence
+  const response = await fetch('http://localhost:3000/updateTopicByReference', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+   reference:reference,
+   post_name: postname,
+   mandatory_skills: MandatorySkills,
+   duration:duration,
+   nb_profiles:nb_profiles,
+   description: poste_description, // Description du poste
+   qualifications: { // Map qualifications to the three variables
+          degree: Degree,
+          experience: "",
+          portfolio: "" // Optional field
+        }
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update topic');
+  }
+
+  const data = await response.json();
+  console.log(data);
+      // Appeler fetchTopics pour mettre à jour la liste affichée
+      await fetchTopics();
+      // Cacher le formulaire après la mise à jour
+  hideForm();
+  toast.success($i18n.t('Topic successfully updated.'));
+} catch (error) {
+  toast.error($i18n.t('Error updating Topic: ' + error.message));
+}
+      }
+      else{
     // Check if all required fields are filled
   if (!postname.trim() || 
       MandatorySkills.length === 0 || 
@@ -796,13 +838,13 @@ toast.error($i18n.t('Error updating job collection: ' + error.message));
       !poste_description.trim() || 
       !Degree.trim() || 
       !experience.trim()) {
-    toast.error($i18n.t('Veuillez remplir tous les champs avant d\'ajouter un poste.'));
+    toast.error($i18n.t('Please fill all fields before adding a position.'));
     return;
   }
   
   try {
     // Appelle l'API pour mettre à jour le job par référence
-    const response = await fetch('http://localhost:3002/updateJobByReference', {
+    const response = await fetch('http://localhost:3000/updateJobByReference', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -831,6 +873,7 @@ toast.error($i18n.t('Error updating job collection: ' + error.message));
   }
 
 }
+    }
 
 function openEditInterface(position) {
 
@@ -839,23 +882,81 @@ function openEditInterface(position) {
   Jobreference = position?.reference;
   newPosition = position?.post_name;
   NewMandatorySkills = position?.mandatory_skills;
-  NewOptionalSkills = position?.optional_skills; // Corrected to match the key name
   MandatorySkillsInputs = [...position?.mandatory_skills, ""];
-  optionalSkillsInputs = [...position?.optional_skills, ""];
-
   // Fill the additional fields
   Degree = position?.qualifications?.degree || ''; // Fallback to empty string if undefined
-  experience = position?.qualifications?.experience || ''; // Fallback to empty string if undefined
-  Portfolio = position?.qualifications?.portfolio || ''; // Fallback to empty string since it's optional
-  poste_description = position?.description || ''; // Fallback to empty string if undefined
+ poste_description = position?.description || ''; // Fallback to empty string if undefined
 
+  if(selectedPositionType=="internship"){
+    duration=position?.duration;
+    nb_profiles=position?.nb_profiles;
+  }else{
+    NewOptionalSkills = position?.optional_skills; // Corrected to match the key name
+    optionalSkillsInputs = [...position?.optional_skills, ""];
+    experience = position?.qualifications?.experience || ''; // Fallback to empty string if undefined
+    Portfolio = position?.qualifications?.portfolio || ''; // Fallback to empty string since it's optional
+  
+  }
+ 
   console.log(position); // Debugging information
-  showAddForm = true; // Show the form for editing
+  showAddForm = true; // Show the form for editingF
   updateMode = true;  // Set to update mode
   console.log(position?.post_name); // Debugging information
 }
 
-async function AddPosition(postname, mandatorySkills, optionalSkills, poste_description, degree, experience, portfolio) {
+async function AddPosition(postname:string, mandatorySkills:string[], optionalSkills:string[], poste_description:string, degree:string, experience:string, portfolio:string, nb_profiles:number, duration:string) {
+  if(selectedPositionType=="internship"){
+// Check if all fields are filled
+if (!degree.trim()||
+    !poste_description.trim()||
+    !postname.trim()||
+     mandatorySkills.length === 0 ||
+    !poste_description.trim()||
+     nb_profiles==0|| 
+    !duration.trim()) {
+  toast.error($i18n.t('Please fill all fields before adding a topic.'));
+  return;
+}
+const newTopic = {
+  reference: uuidv4(),
+  post_name: postname,
+  mandatory_skills: mandatorySkills,
+  optional_skills: optionalSkills, // Assurez-vous que la clé est correcte
+  duration:duration,
+  nb_profiles:nb_profiles,
+  description:poste_description,
+  qualifications: {
+      degree: degree,
+      experience: "",
+      portfolio: "" // Optional field
+    }
+
+};
+
+try {
+  const response = await fetch('http://localhost:3000/topic_insert', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(newTopic),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to insert topic');
+  }
+
+  const data = await response.json();
+  toast.success($i18n.t('Topic successfully added !' ));
+console.log(jobs);
+  // Appeler fetchJobs pour mettre à jour la liste affichée
+  await fetchTopics();
+  // Cacher le formulaire après la mise à jour
+  hideForm();
+} catch (error) {
+  toast.error($i18n.t('Error inserting topic: ' + error.message));
+}
+}else{
   // Check if all required fields are filled
   if (!postname.trim() || 
       mandatorySkills.length === 0 || 
@@ -863,7 +964,7 @@ async function AddPosition(postname, mandatorySkills, optionalSkills, poste_desc
       !poste_description.trim() || 
       !degree.trim() || 
       !experience.trim()) {
-    toast.error($i18n.t('Veuillez remplir tous les champs avant d\'ajouter un poste.'));
+    toast.error($i18n.t('Please fill all fields before adding a position.'));
     return;
   }
 
@@ -882,7 +983,7 @@ async function AddPosition(postname, mandatorySkills, optionalSkills, poste_desc
   };
 
   try {
-    const response = await fetch('http://localhost:3002/jobs_insert', {
+    const response = await fetch('http://localhost:3000/jobs_insert', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -895,7 +996,7 @@ async function AddPosition(postname, mandatorySkills, optionalSkills, poste_desc
     }
 
     const data = await response.json();
-    toast.success($i18n.t('Offre insérée avec succès !'));
+    toast.success($i18n.t('Position added successfully !'));
     console.log(data);
     
     // Call fetchJobs to update the displayed list
@@ -907,21 +1008,28 @@ async function AddPosition(postname, mandatorySkills, optionalSkills, poste_desc
     toast.error($i18n.t('Error inserting job: ' + error.message));
   }
 }
+}
 
 function validateStep() {
-    if (!selectedJob) {
-        // Display an error message
-        toast.error($i18n.t("Veuillez sélectionner une position.")); // Replace with your preferred method of displaying the message
-        return; // Exit the function to prevent further action
-    }
+  if (!selectedJob) {
+    // Display an error message
+    if(selectedPositionType === "internship"){
+      toast.error($i18n.t("Please select a topic.")); // Display the error message
+
+    }else{
+    toast.error($i18n.t("Please select a Position.")); // Display the error message
+  }return; // Exit the function to prevent further action
+  
+}
+ 
     console.log(currentStep);
     if(currentStep==2){
       
       if (selectedDocuements.length==0) { 
             // Affiche un message toast si aucune sélection n'a été faite
-            toast.error('Veuillez sélectionner Vos CVs');
+            toast.error('Please select your CVs');
           } else if (selectedCategoryName ==""){
-            toast.error('Veuillez sélectionner Une Collection');
+            toast.error('Please select a collection');
           }
           else
           {
@@ -996,7 +1104,21 @@ function updateButtonState() {
     return 0; // Retourner une taille par défaut si aucun fichier n'est trouvé
   }
 }
-
+// Fonction pour gérer la soumission
+async function handleSubmitType() {
+if (!selectedPositionType) {
+  // Affiche un message toast si aucune sélection n'a été faite
+  toast.error($i18n.t("Please select a position type!"));
+} else {
+  if(selectedPositionType=="internship"){
+    await fetchTopics();
+  }else{
+    await fetchJobs();
+  }
+  // Change l'état de ShowPositionstype pour masquer l'élément
+  ShowPositionstype = false;
+}
+}
 function openLinkedInProfile(linkedinUrl: string) {
   if (linkedinUrl) {
     window.open(linkedinUrl, '_blank');
@@ -1134,7 +1256,7 @@ function redirectToChatbot() {
     // Redirect to the chatbot route with query parameters
     goto(`/?${queryString}`);
   } else {
-    toast.error("Aucun candidat sélectionné pour aller au chatbot."); // Alert if no candidates are selected
+    toast.error("No candidate selected to go to the chatbot."); // Alert if no candidates are selected
   }
 }
  
@@ -1190,6 +1312,7 @@ const toggleCategoryModal = () => {
    
 let successMessage = '';
 
+
 const submitHandler = async () => {
   if (categoryName.trim()) {
     const newCategory = { name: categoryName.trim() };
@@ -1241,12 +1364,23 @@ const submitHandler = async () => {
    
   }
 
+    // Fonction pour extraire le nom du candidat
+    function extractName(text) {
+    const regex = /Nom\s*:\s*([A-Za-zÀ-ÿ\s\-]+)/; // Expression régulière pour extraire le nom
+    const match = text.match(regex);
+    return match ? match[1] : '-';
+  }
+
+
   function extrairePartiesProfilEtScore(texte) {
     const parties = {};
 
     // Expression régulière pour capturer les détails (Nom, Prénom, Téléphone, Adresse, Email, Niveau d'expérience)
-    const regexDetails = /Nom\s*:\s*([^\n]*)\s*Prénom\s*:\s*([^\n]*)\s*Téléphone\s*:\s*([^\n]*)\s*Adresse\s*:\s*([^\n]*)\s*Email\s*:\s*([^\n]*)\s*Niveau d'expérience\s*:\s*([^\n]*)/;
-    const detailsMatch = texte.match(regexDetails);
+    //const regexDetails = /Nom\s*:\s*([^\n]*)\s*Prénom\s*:\s*([^\n]*)\s*Téléphone\s*:\s*([^\n]*)\s*Adresse\s*:\s*([^\n]*)\s*Email\s*:\s*([^\n]*)\s*Niveau d'expérience\s*:\s*([^\n]*)/;
+   // const regexDetailss = /Nom\s*:\s*([^\n]*)\s*\*\s*Prénom\s*:\s*([^\n]*)\s*\*\s*Téléphone\s*:\s*([^\n]*)\s*\*\s*Adresse\s*:\s*([^\n]*)\s*\*\s*Email\s*:\s*([^\n]*)\s*\*\s*Niveau d'expérience\s*:\s*([^\n]*)/;
+   const regexDetails = /Nom\s*:\s*([^\n]*)\s*\*?\s*Prénom\s*:\s*([^\n]*)\s*\*?\s*Téléphone\s*:\s*([^\n]*)\s*\*?\s*Adresse\s*:\s*([^\n]*)\s*\*?\s*Email\s*:\s*([^\n]*)\s*\*?\s*Niveau d'expérience\s*:\s*([^\n]*)/;
+
+   const detailsMatch = texte.match(regexDetails);
     
     let nom = "";
     let prenom = "";
@@ -1280,7 +1414,10 @@ const submitHandler = async () => {
     const regexScore = /(?:\*{4}\s*\((\d+)\s*\/\s*100\)|(?:note|score|Note|Score)\s*(de|:)?\s*(\d+)|(\d+)\s*\/\s*100)/;
     const scoreMatch = texte.match(regexScore);
     const score = scoreMatch ? (scoreMatch[1] || scoreMatch[3] || scoreMatch[4]) : "Non trouvé"; // On prend le score de la première capture valide
-
+    if(selectedPositionType=="internship"){
+      nom=extractName(texte);
+    }
+    
     // Retourne les détails et le score
     return { nom, prenom, telephone, adresse, email, niveauExperience, ...parties, score };
 }
@@ -1405,6 +1542,7 @@ async function EvaluteCv_enBoucle() {
             };
             document.nom=firstResponse.nom.split(' ')[0];
             document.prenom=firstResponse.nom.split(' ').slice(1).join(' ');
+            console.log(firstResponse.nom);
             refresh = !refresh; // Cela forcera Svelte à re-render car la variable change
             document.Téléphone=firstResponse.telephone;
             document.Email=firstResponse.email;
@@ -1508,10 +1646,46 @@ let selectedCategoryName = "";
     return tableHtml;
 }
 
+async function fetchCvEvaluationPrompt(title, description, responsibilities, skills_required, degree, experience, portfolio, duration,nbprofiles) {   
+  if(selectedPositionType=="internship"){
+    const url = 'http://20.84.80.6:5000/generate_cv_evaluation_prompt_Stage';    
+ 
+ // Convert arrays and fields into URLSearchParams for x-www-form-urlencoded format
+ const params = new URLSearchParams();
+ params.append('Post_name', title);
+ params.append('project_Description', description);
+ console.log(responsibilities);
+ responsibilities.forEach(responsibility => params.append('skills_required', responsibility));
+ params.append('profile_Level', degree);
+console.log(params.toString());
 
-async function fetchCvEvaluationPrompt(title, description, responsibilities, skills_required, degree, experience, portfolio) {    
+ try {        
+     // Sending the POST request
+     const response = await fetch(url, {
+         method: 'POST',
+         headers: {
+             'accept': 'application/json',
+             'Content-Type': 'application/x-www-form-urlencoded'
+         },
+         body: params.toString()  // Serialize the body
+     });
+
+     // Check if the request was successful
+     if (response.ok) {            
+         const data = await response.json();            
+         console.log("API Output:", data);            
+         return data;
+     } else {
+         console.error("Error:", response.statusText);
+     }
+ } catch (error) {
+     console.error("Error fetching data:", error);
+ }
+
+  }
+  else {
     const url = 'http://20.84.80.6:5000/generate_cv_evaluation_prompt_STAR';    
-
+ 
     // Convert arrays and fields into URLSearchParams for x-www-form-urlencoded format
     const params = new URLSearchParams();
     params.append('title', title);
@@ -1522,7 +1696,7 @@ async function fetchCvEvaluationPrompt(title, description, responsibilities, ski
     params.append('degree', degree);
     params.append('experience', experience);
     params.append('portfolio', portfolio);
-
+    console.log(params);
     try {        
         // Sending the POST request
         const response = await fetch(url, {
@@ -1533,7 +1707,7 @@ async function fetchCvEvaluationPrompt(title, description, responsibilities, ski
             },
             body: params.toString()  // Serialize the body
         });
-
+ 
         // Check if the request was successful
         if (response.ok) {            
             const data = await response.json();            
@@ -1546,8 +1720,7 @@ async function fetchCvEvaluationPrompt(title, description, responsibilities, ski
         console.error("Error fetching data:", error);
     }
 }
-
-
+}
 let preprompt="";
 
 const processFile = async (file: File, langchain_mode: string, chunk = true, chunk_size = 512, embed = true) => {
@@ -1575,7 +1748,7 @@ const processFile = async (file: File, langchain_mode: string, chunk = true, chu
     fetchDocuments(langchain_mode);
    
   
-    toast.success(`Fichier Chargé avec succès!`);
+    toast.success(`File Uploaded successfully!`);
     return data; // Retourner les données pour une utilisation ultérieure
   } else {
     const errorData = await response.json();
@@ -1642,13 +1815,14 @@ function afficherTableauErgonomique(donnees) {
 }
 let isLoading = false; // Variable pour gérer l'état du loader
 let username = 'dev_user1'; // Nom d'utilisateur par défaut
-let path='C:\Users\sfh\OneDrive - WEVIOO\Documents\Python Scripts';
-
+let path='db_dir';
 
 let responseData = null; // Pour stocker les données de la réponse
 // Fonction pour ajouter un nouveau mode Langchain
 async function addNewLangchainMode(user, mode, path) {
         isLoading = true; // Démarrer le chargement
+        path=path+'_'+mode;
+        console.log(path);
         try {
             // Construire l'URL avec les paramètres
             const response = await fetch(`http://20.84.80.6:5000/add_new_langchain_mode?username=${encodeURIComponent(user)}&langchain_mode=${encodeURIComponent(mode)}&langchain_path=${encodeURIComponent(path)}`, {
@@ -1708,9 +1882,10 @@ async function addNewLangchainMode(user, mode, path) {
   }
 
   let Showjobinfo=false;
-   let Degree;
+   
    let experience;
    let Portfolio;
+ 
 
 
 
@@ -1763,37 +1938,44 @@ let jobdetail :Job;
 
 <AddDocModal bind:show={showAddDocModal} {uploadDoc} {processFile} />
 
-<div class="stepper-wrapper">
+<div class="stepper-wrapper ">
   <button class="stepper-item {currentStep > 1 ? 'completed' : 'active'}" on:click={() => goToStep_stepper(1)}>
     <div class="step-counter">1</div>
-    <div class="step-name">{$i18n.t('Choisir votre poste')}</div>
+    <div class="step-name">{$i18n.t(selectedPositionType === 'internship' ? 'Choose your topic' : 'Choose your position')}</div>
+
+    
 </button>
 <button class="stepper-item {currentStep > 2 ? 'completed' : 'active'}"  on:click={() => {
 
   if (!selectedJob) {
     // Display an error message
-    toast.error($i18n.t("Veuillez sélectionner une position.")); // Display the error message
-    return; // Exit the function to prevent further action
-  }
+    if(selectedPositionType === "internship"){
+      toast.error($i18n.t("Please select a topic.")); // Display the error message
+
+    }else{
+    toast.error($i18n.t("Please select a Position.")); // Display the error message
+  }return; // Exit the function to prevent further action
+  
+}
  
   goToStep_stepper(2); // Proceed to the next step if a job is selected
 }}
 >
     <div class="step-counter">2</div>
-    <div class="step-name">{$i18n.t('Sélectionner vos CVs')}</div>
+    <div class="step-name">{$i18n.t('Select your CVs')}</div>
 </button>
 <button
   class="stepper-item {currentStep > 3 ? 'completed' : 'active'}"
   on:click={() => {
     if (currentStep === 1 && !selectedJob) {
       // Display an error message if no job is selected
-      toast.error($i18n.t("Veuillez sélectionner une position avant de passer à l'étape 3.")); // Display the error message
+      toast.error($i18n.t("Please select a position before proceeding to step 3.")); // Display the error message
       return; // Exit the function to prevent further action
     }
 
-    if (selectedDocuments.length === 0) {
+    if (selectedDocuements.length === 0) {
       // Display an error message if no documents are selected
-      toast.error($i18n.t("Veuillez sélectionner au moins un CV.")); // Display the error message
+      toast.error($i18n.t("Please select at least one CV.")); // Display the error message
       return; // Exit the function to prevent further action
     }
 
@@ -1801,15 +1983,15 @@ let jobdetail :Job;
   }}
 >
     <div class="step-counter">3</div>
-    <div class="step-name">{$i18n.t('Évaluer vos CVs')}</div>
-</button>
+    <div class="step-name">{$i18n.t('Evaluate your CVs')}</div>
+  </button>
 
 </div>
 {#if currentStep==2}
 
 <div class="mb-3" style="display: flex; align-items:baseline;">
     <div class="flex justify-between items-center" style="width: 80%;">
-      <div class=" text-lg font-semibold self-center">{$i18n.t('Sélectionner vos CVs pour l offre de stage : ')+selectedJob?.post_name}</div>
+      <div class=" text-lg font-semibold self-center">{$i18n.t('Select your CVs for the internship offer : ')+selectedJob?.post_name}</div>
     </div>
 
     <div class="my-3 w-full flex justify-between" style="display: flex;
@@ -1825,9 +2007,9 @@ let jobdetail :Job;
         fetchDocuments(selectedCategoryName ); // Make sure langchain_mode is defined
       }}
     >
-      <option value="" disabled selected style="color: gray;">{$i18n.t('Sélectionnez la Collection')}</option>
+      <option value="" disabled selected style="color: gray;">{$i18n.t('Select the collection')}</option>
       {#each categories as category}
-        <option value={category.name} style="color: #168c77; background-color: white;">{category.name}</option>
+        <option value={category.name} style="color: #006654; background-color: white;">{category.name}</option>
       {/each}
     </select>
 
@@ -1840,9 +2022,10 @@ let jobdetail :Job;
     
     }}
 
+
  
   >
-    <div class=" self-center mr-2 font-medium line-clamp-1" >{$i18n.t('Ajouter Une collection')}</div>
+    <div class=" self-center mr-2 font-medium line-clamp-1" >{$i18n.t('Add a collection')}</div>
 
     <div class=" self-center">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 s-vcJllTiem_cB"><path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" class="s-vcJllTiem_cB"></path></svg>
@@ -1863,32 +2046,31 @@ let jobdetail :Job;
     <div class="flex justify-between p-4 border-b">
       <div class="font-medium"  style="display: flex;
     text-align: center;
-    align-items: center;">{$i18n.t('Ajouter Une Collection')}</div>
+    align-items: center;">{$i18n.t('Add a collection')}</div>
       <button on:click={() => (show = false)} class="text-gray-600 hover:text-gray-800 text-xl p-1"> <!-- Increased font size and padding -->
         &times; 
       </button>
     </div>
     <div class="p-4">
-      <label for="category-name" class="block mb-2">{$i18n.t('Nom de la collection')}</label>
+      <label for="category-name" class="block mb-2">{$i18n.t('Name of the collection')}</label>
       <input
         id="category-name"
         type="text"
         bind:value={categoryName}
         class="border rounded-lg w-full p-2 mb-4"
-        placeholder={$i18n.t("Entrez le nom de la collection")}
+        placeholder={$i18n.t("Enter the name of the collection")}
       />
       <div class="flex justify-end">
         <button
         on:click={() => {
           submitHandler(); // Appel de la première fonction
           addNewLangchainMode(username, categoryName, path); // Appel de la seconde fonction
-          fetchCategories()
         }}
       
           class="bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 px-4 rounded"
           style="border-radius: 17px;"
         >
-          {$i18n.t('Enregistrer')}
+          {$i18n.t('Save')}
         </button>
       </div>
     </div>
@@ -1918,7 +2100,7 @@ let jobdetail :Job;
       <input
         class=" w-full text-sm pr-4 py-1 rounded-r-xl outline-none bg-transparent"
       
-        placeholder={$i18n.t('Rechercher des documents')}
+        placeholder={$i18n.t('Search documents')}
         bind:value={searchTerm}
         on:input={() => { currentPage = 1; }}  
       />
@@ -1936,6 +2118,7 @@ let jobdetail :Job;
         on:click={() => {
           showAddDocModal = true;
         }}
+         disabled={selectedCategoryName === ''}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -1968,10 +2151,10 @@ let jobdetail :Job;
       <div class="w-12"></div>
       <div class="flex-1 text-sm font-bold title">
 
-        {$i18n.t('Nom du document')}
+        {$i18n.t('Document name')}
       </div>
   
-      <div class="w-40 text-sm font-bold title">{$i18n.t('Type du document')}</div>
+      <div class="w-40 text-sm font-bold title">{$i18n.t('Document type')}</div>
       
       <div class="w-16"></div>
     </div>
@@ -2081,12 +2264,12 @@ let jobdetail :Job;
   {#if selectedCategoryName==""}
     <!-- Message if the list is empty -->
     <div class="text-gray-500 py-4 text-center">
-      <strong>{$i18n.t('Aucune collection n est sélectionnée')}</strong>
-    </div>
+      <strong>{$i18n.t('No collection is selected')}</strong>
+  </div>
     {:else}
     <div class="text-gray-500 py-4 text-center">
-      <strong>{$i18n.t('Aucun CV ne correspond à votre recherche')}</strong>
-    </div>
+      <strong>{$i18n.t('No CV matches your search')}</strong>
+  </div>
     {/if}
   {/each}
 </div>
@@ -2106,25 +2289,18 @@ let jobdetail :Job;
   {#if ShowPositionstype == true}
     <div style="display: flex; flex-direction: column;width: 320px; align-items: center;">
       <!-- Titre -->
-      <h2 class="card-title">{$i18n.t('Types de postes')} </h2>
+      <h2 class="card-title">{$i18n.t('Types of Positions')} </h2>
 
       <!-- Dropdown -->
       <select id="positions-dropdown" class="styled-dropdown mt-2" bind:value={selectedPositionType}>
-        <option value="" disabled selected>{$i18n.t('Sélectionnez un type de poste')}</option>
-        <option value="internship">{$i18n.t('Postes de stage')}</option>
-        <option value="employment">{$i18n.t('Postes d emploi')}</option>
+          <option value="" disabled selected>{$i18n.t('Select a Type of Position')}</option>
+          <option value="internship">{$i18n.t('Internship Positions')}</option>
+          <option value="employment">{$i18n.t('Employment Positions')}</option>
       </select>
-                <!-- Bouton Soumettre -->
-                <button id="validateButton" class="flex items-center justify-center mt-4" on:click={() => {
-                  if (!selectedPositionType) { 
-                    // Affiche un message toast si aucune sélection n'a été faite
-                    toast.error('Veuillez sélectionner un type de poste !');
-                  } else {
-                    ShowPositionstype = false;
-                  }
-                }}>
-                 {$i18n.t(' Soumettre')}
-                </button>
+               <!-- Bouton Soumettre -->
+              <button id="validateButton" class="flex items-center justify-center mt-4" on:click={handleSubmitType}>
+                  {$i18n.t('Submit')}
+                 </button>
     
     </div>
   
@@ -2155,7 +2331,7 @@ let jobdetail :Job;
     <input
       class=" w-full text-sm pr-4 py-1 rounded-r-xl outline-none "
       bind:value={selectedPostName}
-      placeholder={$i18n.t('Recherche des Postes')}
+      placeholder={$i18n.t('Position Search')}
     />
         
   </div>
@@ -2165,7 +2341,8 @@ let jobdetail :Job;
 <hr class="dark:border-gray-850 my-6" />
 {#if paginatedJobs.length==0}
   <div style="display: flex; justify-content: center;">
-  <p style="font-size: large;">{$i18n.t('Aucun poste ne correspond à votre recherche.')}</p> 
+  <p style="font-size: large;">{$i18n.t('No position matches your search.')}
+  </p> 
   </div>
   {:else}
 <div class="cards-container">
@@ -2184,7 +2361,7 @@ let jobdetail :Job;
   
     <div class="skills-section {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}">
       <div style="display: flex; justify-content:space-between;">
-        <strong class="mini-title">{$i18n.t('Description Du Poste:')}</strong>
+        <strong class="mini-title">{$i18n.t(selectedPositionType === 'internship' ? 'Topic Description :' : 'Job Description :')}</strong>
         <div style="display: flex; align-items:center;">
         <!-- Icône d'info à gauche -->
         <button class="info-button" on:click={() => jobdetails(position)}>
@@ -2205,9 +2382,8 @@ let jobdetail :Job;
     <button class="{selectedJob && selectedJob.post_name === position.post_name ? 'selected' : 'select-button'}"
     on:click={async (event) => {
         toggleButton(event.target, position);
-      
         
-       // Appel de la fonction `fetchCvEvaluationPrompt` avec les paramètres extraits de `selectedJob`
+               // Appel de la fonction `fetchCvEvaluationPrompt` avec les paramètres extraits de `selectedJob`
 const prepromptValue = await fetchCvEvaluationPrompt(
   position.post_name, // Titre du poste
   position.description, // Description du poste
@@ -2215,10 +2391,10 @@ const prepromptValue = await fetchCvEvaluationPrompt(
   position.optional_skills, // Compétences optionnelles
   position.qualifications.degree, // Diplôme
   position.qualifications.experience, // Expérience
-  position.qualifications.portfolio // Portfolio (facultatif)
+  position.qualifications.portfolio, // Portfolio (facultatif)
+  position.duration, // durée du stage
+  position.nb_profiles // nombre de profils demandés
 );
-
-
     // Vérifier que prepromptValue est un tableau et prendre le premier élément
 if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
     preprompt = prepromptValue[0]; // Assigner le premier élément à preprompt
@@ -2231,8 +2407,8 @@ if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
         console.log(preprompt);
     }}>
       {selectedJob && selectedJob.post_name === position.post_name
-        ? $i18n.t('Sélectionné')
-        : $i18n.t('Sélectionner')}
+        ? $i18n.t('Selected')
+        : $i18n.t('Select')}
     </button>
   </div>
   {/each}
@@ -2275,13 +2451,14 @@ if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
 </div>
   <div class="button-container  ">
     <button class="bold-icon flex items-center justify-center custom-bg hover:custom-bg-hover" on:click={() => showForm()}>
-     {$i18n.t(' Ajouter un poste')} +
+           {$i18n.t(selectedPositionType === 'internship' ? 'Add topic +' : 'Add position +')}    
+
       
       </button>
       
       <button id="validateButton" class="flex items-center justify-center" on:click={() => validateStep()}>
-        {$i18n.t('Soumettre')}
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check ml-2 " viewBox="0 0 16 16">
+          {$i18n.t('Submit')}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check ml-2 " viewBox="0 0 16 16">
           <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
         </svg>
       </button>
@@ -2301,25 +2478,30 @@ if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
       flex-direction: column;
       justify-content: space-between;
       ">
-        <strong class="mini-title">{$i18n.t('Your poste')}</strong> <br>
+      <strong class="mini-title">
+        {$i18n.t(selectedPositionType === 'internship' ? 'Your topic' : 'Your position')}
+      </strong>
+      <br>
         <div style="margin-top: 2rem;">
         <label style=" font-weight: bold;
-    padding: 1px;">Poste Title</label>
+    padding: 1px;"> {$i18n.t(selectedPositionType === 'internship' ? 'Topic title' : 'Position title')}</label>
         <input 
         bind:value={newPosition}
         class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none" 
-        placeholder={$i18n.t('Add your Poste Title')}        
+        placeholder={$i18n.t(selectedPositionType === 'internship' ? 'Add your topic title' : 'Add your position title')}    
     />
   </div>
   <div style="margin-top: 2rem;">
 
     <label style=" font-weight: bold;
-    padding: 1px;">Poste Description</label>
+        padding: 1px;"> {$i18n.t(selectedPositionType === 'internship' ? 'Topic Description' : 'Position Description')}</label>
+
     <textarea
     bind:value={poste_description}
     class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none"
     style="height: 150px;"
-    placeholder={$i18n.t('Add Your Poste Description')}
+    placeholder={$i18n.t(selectedPositionType === 'internship' ? 'Add your topic description' : 'Add your position description')}    
+
   />
 </div>
   
@@ -2331,11 +2513,10 @@ if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
       flex-direction: column;
       justify-content: space-between;
       ">
-        <strong class="mini-title">{$i18n.t('Qualifications')}</strong> <br> 
-
+      <strong class="mini-title">{$i18n.t(selectedPositionType === 'internship' ? 'Administrative specifications' : 'Qualifications')}</strong> <br> 
         <div style="margin-top: 2rem;">
           <label style=" font-weight: bold;
-    padding: 1px;">Degree</label>
+    padding: 1px;">{$i18n.t('Degree')}</label>
         <input 
         bind:value={Degree}
         class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none" 
@@ -2344,25 +2525,46 @@ if (Array.isArray(prepromptValue) && prepromptValue.length > 0) {
 
   </div>
 
+  {#if selectedPositionType === "internship"}
+  <div style="margin-top: 2rem;">
+    <label style=" font-weight: bold;
+     padding: 1px;">{$i18n.t('Number of profiles')}</label>
+    <input 
+    bind:value={nb_profiles}
+    class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none" 
+    placeholder={$i18n.t('Add the number of profiles')}        
+    />
+  </div>
+  <div style="margin-top: 2rem;">
+    <label style=" font-weight: bold;
+padding: 1px;">{$i18n.t('Duration')}</label>
+    <textarea
+    bind:value={duration}
+    class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none"
+    placeholder={$i18n.t('Add your duration')}
+  />
+  </div>
+{:else}
 
   <div style="margin-top: 2rem;">
     <label style=" font-weight: bold;
-padding: 1px;">Experience</label>
+     padding: 1px;">{$i18n.t('Experience')}</label>
     <input 
     bind:value={experience}
     class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none" 
     placeholder={$i18n.t('Add your Experience')}        
-/>
+    />
   </div>
   <div style="margin-top: 2rem;">
     <label style=" font-weight: bold;
-padding: 1px;">Portfolio</label>
+padding: 1px;">{$i18n.t('Portfolio')}</label>
     <textarea
     bind:value={Portfolio}
     class="px-3 py-1.5 text-sm w-full input-style height dark:border-gray-600 outline-none"
     placeholder={$i18n.t('Add Your Portfolio')}
   />
   </div>
+  {/if}
       </div>
       <div class="info-box" style="direction: {$i18n.language === 'ar-BH' ? 'rtl' : 'ltr'}; 
       text-align: {$i18n.language === 'ar-BH' ? 'right' : 'left'}; 
@@ -2371,7 +2573,7 @@ padding: 1px;">Portfolio</label>
       flex-direction: column;
       justify-content: space-between;
       ">
-    <strong class="mini-title">{$i18n.t('Responsibilities')}</strong>
+      <strong class="mini-title">{$i18n.t(selectedPositionType === 'internship' ? 'Required Skills' : 'Responsibilities')}</strong> <br> 
     <div class="skills-section">
       {#if NewMandatorySkills.length > 0}
         <ul class="skills-container">
@@ -2387,15 +2589,17 @@ padding: 1px;">Portfolio</label>
           {/each}
         </ul>
       {:else}
-        <p>{$i18n.t('No Responsibilities')}</p>
+      <p>{$i18n.t(selectedPositionType === 'internship' ? 'No required skills' : 'No Responsibilities')}</p> 
       {/if}
+
     </div>
     
     <br>
     <div style="display: flex; justify-content: center;">
       <button
         class="px-2 py-2 rounded-xl border border-gray-200 dark:border-gray-600 dark:border-0 custom-bg hover:custom-bg-hover dark:bg-gray-800 dark:hover:bg-gray-700 transition font-medium text-sm flex items-center space-x-1"
-        aria-label={$i18n.t('Enter Your responsibilities')}
+        aria-label={$i18n.t(selectedPositionType === 'internship' ? 'Enter Your skills' : 'Enter Your responsibilities')}    
+
         on:click={() => {
           if (MandatorySkillsInputs.length > 1 || MandatorySkillsInputs[0] !== "") {
             MandatorySkillsInputs = MandatorySkillsInputs.filter(skill => skill.trim() !== "");
@@ -2413,7 +2617,8 @@ padding: 1px;">Portfolio</label>
     
 </div>
 
-      
+            {#if selectedPositionType === "internship"}
+{:else}
 <div class="info-box" style="direction: {$i18n.language === 'ar-BH' ? 'rtl' : 'ltr'}; 
 text-align: {$i18n.language === 'ar-BH' ? 'right' : 'left'}; 
 flex-direction: {$i18n.language === 'ar-BH' ? 'row-reverse' : 'row'};
@@ -2468,16 +2673,18 @@ justify-content: space-between;">
           />
         </svg>
       </button>
+      
     </div>
-    </div>
+    </div> 
+    {/if}
     </div>
   </div>
   <div class="button-container ">
     <button class="custom-bg hover:custom-bg-hover" on:click={() => hideForm()}>
-       {$i18n.t('Annuler')} 
+       {$i18n.t('Cancel')} 
       </button>
 
-      <button id="validateButton" on:click={() => updateMode ? UpdatePosition(Jobreference,newPosition,NewMandatorySkills,NewOptionalSkills,poste_description,Degree,experience,Portfolio) : AddPosition(newPosition,NewMandatorySkills,NewOptionalSkills,poste_description,Degree,experience,Portfolio)}>
+      <button id="validateButton" on:click={() => updateMode ? UpdatePosition(Jobreference,newPosition,NewMandatorySkills,NewOptionalSkills,poste_description,Degree,experience,nb_profiles,Portfolio,duration) : AddPosition(newPosition,NewMandatorySkills,NewOptionalSkills,poste_description,Degree,experience,Portfolio,nb_profiles,duration)}>
     {updateMode ? $i18n.t('Update') : $i18n.t('Add')}
   </button>
 </div>
@@ -2486,7 +2693,7 @@ justify-content: space-between;">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
-        <h3>{$i18n.t('Enter your responsibilities')}</h3>
+        <h3>{$i18n.t(selectedPositionType === 'internship' ? 'Enter Your skills' : 'Enter Your responsibilities')}    </h3>
         <button class="close-button" on:click={handleCancelMandatory}>
           &times;
         </button>
@@ -2500,13 +2707,13 @@ justify-content: space-between;">
             <input
               bind:value={MandatorySkillsInputs[index]}
               class="input-style"
-              placeholder={$i18n.t('Enter a responsibilitie')}
+              placeholder={$i18n.t(selectedPositionType === 'internship' ? 'Enter a skill' : 'Enter a responsibility')}
             />
             {#if index === MandatorySkillsInputs.length - 1} <!-- Only show "+" for the last input -->
               <div>
                 <button
                   class="px-2 py-2 rounded-xl border border-gray-200 dark:border-gray-600 dark:border-0 button-plus hover:custom-bg-hover dark:bg-gray-800 dark:hover:bg-gray-700 transition font-medium text-sm flex items-center space-x-1"
-                  aria-label={$i18n.t('Enter a Required Skill')}
+                  aria-label={$i18n.t(selectedPositionType === 'internship' ? 'Enter a skill' : 'Enter a responsibility')}
                   on:click={addMandatorySkillInput}
                 >
                   <svg
@@ -2616,7 +2823,7 @@ justify-content: space-between;">
   <div class="button-container">
     <button id="validateButton" on:click={() => { validateStep(); EvaluteCv_enBoucle(); }}>
       {#if currentStep === 2}
-    {$i18n.t('Evaluer')}
+    {$i18n.t('Evaluate')}
         <img src="/Eval.png" alt="Evaluer Icon" class="icon" />
       {/if}
     </button>
@@ -2639,7 +2846,7 @@ justify-content: space-between;">
 
 <div class="mb-3">
   <div class="flex justify-between items-center">
-    <div class=" text-lg font-semibold self-center">{$i18n.t('Évaluation des CVs pour l offre de stage  : ')+selectedJob?.post_name}</div>
+    <div class=" text-lg font-semibold self-center">{$i18n.t('Evaluation of CVs for the position : ')+selectedJob?.post_name}</div>
   </div>
 </div>
 
@@ -2651,7 +2858,7 @@ justify-content: space-between;">
     type="text"
     class="search-input rounded-xl py-1.5 px-4 text-sm dark:text-gray-300 dark:bg-gray-850 outline-none bordure"
     style="margin-right: 10px;"
-    placeholder={$i18n.t("Rechercher...")}
+    placeholder={$i18n.t("Search...")}
     bind:value={searchTermcvs} 
   />
 
@@ -2677,7 +2884,7 @@ justify-content: space-between;">
   >
     <div class="self-center mr-2 font-medium" style="font-size: 13px;
 ">
-      {$i18n.t('Export les Condidatures')}
+      {$i18n.t('Export Applications')}
     </div>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4">
       <path fill-rule="evenodd" d="M4 2a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 4 14h8a1.5 1.5 0 0 0 1.5-1.5V6.621a1.5 1.5 0 0 0-.44-1.06L9.94 2.439A1.5 1.5 0 0 0 8.878 2H4Zm4 3.5a.75.75 0 0 1 .75.75v2.69l.72-.72a.75.75 0 1 1 1.06 1.06l-2 2a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 0 1 1.06-1.06l.72.72V6.25A.75.75 0 0 1 8 5.5Z" clip-rule="evenodd"/>
@@ -2753,19 +2960,13 @@ justify-content: space-between;">
     {$i18n.t('Ranking')} {nameSortOrder === 'asc' ? '↑' : '↓'}
 </th>
 
-
-
 <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
     on:click={sortByFirstName} 
     style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
-  {$i18n.t('Prénom')} {firstNameSortOrder === 'asc' ? '↑' : '↓'}
-</th>
-    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
-    on:click={sortByName} 
-    style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
- {$i18n.t('Nom')} {nameSortOrder === 'asc' ? '↑' : '↓'}
+  {$i18n.t('Candidate')} {firstNameSortOrder === 'asc' ? '↑' : '↓'}
 </th>
 
+  
 
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
@@ -2773,28 +2974,28 @@ justify-content: space-between;">
       {$i18n.t('Score')}
     </th>
 
-    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
+    <!--<th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
   style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
   {$i18n.t('Linkedin')}
-  </th>
+  </th>-->
   <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
   style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
-  {$i18n.t('État')}
+  {$i18n.t('Status')}
   </th>
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('sentiment')} 
         style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
       
-{$i18n.t('Récapitulatif')} 
+{$i18n.t('Summary')} 
     </th>
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('sentiment')} 
         style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
       
-        {$i18n.t('Détails de la  conditature')}
-    </th>
+        {$i18n.t('Details of the application')}
+      </th>
         
         <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; border-radius: 0 15px 0 0; text-transform: none; background-color:#9FD5B5"></th>
         
@@ -2824,7 +3025,7 @@ justify-content: space-between;">
 
         <tr>
           <td colspan="10" style="text-align: center; padding: 20px; color: white; background-color:white;">
-          <p style="color:gray"> {$i18n.t('Aucun CV correspondant à votre recherche')}</p>
+              <p style="color:gray"> {$i18n.t('No CVs match your search')}</p>
           </td>
         </tr>
       {:else}
@@ -2848,7 +3049,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
       type="checkbox" 
       checked={cv.GoToChat} 
       on:change={() => cv.GoToChat = !cv.GoToChat} 
-      style="accent-color: #168c77;"
+      style="accent-color: #006654;"
   />
 </td>
 
@@ -2867,19 +3068,21 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
             #{cv.Rank} <!-- Affiche le rang pour les autres -->
           {/if}
         </td>
+      
         <td style="text-align: center; border-right: none; height:50px; font-size:14px;">
-          {cv.nom ? cv.nom : '-'}
+          {cv.nom && cv.prenom ?cv.prenom +" "+ cv.nom : '-'}
         </td>
-        <td style="text-align: center; border-left: none; border-right: none; font-size:14px;">
-          {cv.prenom ? cv.prenom : '-'}
-        </td>
+        
+      
+
+       
             <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">{cv.score ? cv.score : '-'}</td>
 
-            <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">
+           <!-- <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">
               <button class="view-cv-icon" on:click={openLinkedInProfile(cv.Linkedin)}>
                 <img src="/linkedin.png" alt="View CV" />
               </button>
-            </td>
+            </td>-->
             <td style="text-align: center; border-left: none; border-right: none; font-size: 14px;">
               <div style="display: flex; justify-content:center; align-items:center;">
                 <button 
@@ -2937,7 +3140,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
                 <!-- Valid Button -->
                 <button 
                   class="flex items-center justify-center bg-green-600 text-white w-10 h-10 rounded-lg"
-                    style="height: 30px;  width: 30px;     background-color: #168c77;"
+                    style="height: 30px;  width: 30px;     background-color: #006654;"
                     on:click={() => {
       
                       updateStatus(cv, 'ongoing');        
@@ -2972,7 +3175,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
       <tr class="s-FoVA_WMOgxUD">
         <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('date')} 
-        style="text-align: center; border: none; border-radius: 15px 0 0 0; text-transform: none; background-color:#9FD5B5">
+        style="text-align: center; border: none;{$i18n.language === 'ar-BH' ? 'border-radius: 0px 15px 0 0;' : 'border-radius:15px 0px 0 0'}  text-transform: none; background-color:#9FD5B5">
     </th>
 
 
@@ -2982,47 +3185,45 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     {$i18n.t('Ranking')} {nameSortOrder === 'asc' ? '↑' : '↓'}
 </th>
 
-    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
-    on:click={sortByName} 
-    style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
-  {$i18n.t('Nom')} {nameSortOrder === 'asc' ? '↑' : '↓'}
-</th>
-
 <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
     on:click={sortByFirstName} 
     style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
-  {$i18n.t('Prénom')} {firstNameSortOrder === 'asc' ? '↑' : '↓'}
+  {$i18n.t('Candidate')} {firstNameSortOrder === 'asc' ? '↑' : '↓'}
 </th>
+
+
+
+
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
         style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
       {$i18n.t('Score')} 
     </th>
 
-    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
+   <!-- <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
   style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
   {$i18n.t('Linkedin')}
-  </th>
+  </th>-->
   <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
   
   style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
-  {$i18n.t('État')}
+  {$i18n.t('Status')}
   </th>
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('sentiment')} 
         style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
       
-{$i18n.t('Récapitulatif')} 
+{$i18n.t('Summary')} 
     </th>
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('sentiment')} 
         style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">
       
-        {$i18n.t('Détails de la  conditature')}
-    </th>
+        {$i18n.t('Details of the application')}
+      </th>
         
-        <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; border-radius: 0 15px 0 0; text-transform: none; background-color:#9FD5B5"></th>
+        <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none;{$i18n.language === 'ar-BH' ? 'border-radius:15 0px 0 0;' : 'border-radius:0px 15px 0px 0px'}  text-transform: none; background-color:#9FD5B5"></th>
         
       </tr>
     </thead>
@@ -3050,7 +3251,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
         <tr>
           <td colspan="10" style="text-align: center; padding: 20px; color: white; background-color:white;">
-          <p style="color:gray"> {$i18n.t('Aucun CV correspondant à votre recherche')}</p>
+              <p style="color:gray"> {$i18n.t('No CVs match your search')}</p>
           </td>
         </tr>
       {:else}
@@ -3074,7 +3275,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
       type="checkbox" 
       checked={cv.GoToChat} 
       on:change={() => cv.GoToChat = !cv.GoToChat} 
-      style="accent-color: #168c77;"
+      style="accent-color: #006654;"
   />
 </td>
 
@@ -3093,15 +3294,14 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
             #{cv.Rank} <!-- Affiche le rang pour les autres -->
           {/if}
         </td>
-            <td style="text-align: center; border-right: none; height:50px; font-size:10px; font-size: 14px;">{cv.nom}</td>
-            <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">{cv.prenom}</td>
+            <td style="text-align: center; border-right: none; height:50px; font-size:10px; font-size: 14px;">{cv.prenom+" "+cv.nom}</td>
             <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">{cv.score}</td>
 
-            <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">
+          <!--  <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">
               <button class="view-cv-icon" on:click={openLinkedInProfile(cv.Linkedin)}>
                 <img src="/linkedin.png" alt="View CV" />
               </button>
-            </td>
+            </td>-->
             <td style="text-align: center; border-left: none; border-right: none;     font-size: 14px;">
               <div style="display: flex; justify-content:center; align-items:center;">
                 <button 
@@ -3158,7 +3358,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
                 <!-- Valid Button -->
                 <button 
                   class="flex items-center justify-center bg-green-600 text-white w-10 h-10 rounded-lg"
-                    style="height: 30px;  width: 30px;     background-color: #168c77;"
+                    style="height: 30px;  width: 30px;     background-color: #006654;"
                     on:click={() => {
       
                       updateStatus(cv, 'ongoing');        
@@ -3227,20 +3427,20 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
       <div class="field" >
         <label style="display: flex;">
-          <img src="/date de naissance.png" alt="Date de Naissance Icon" class="icon" /> {$i18n.t('Date de Naissance')}
+          <img src="/date de naissance.png" alt="Date de Naissance Icon" class="icon" /> {$i18n.t('Date of birth')}
         </label>
         <p>-</p>
       </div>
       <div class="field" >
         <label style="display: flex;">
-          <img src="/lieunaissance.png" alt="Lieu Icon" class="icon" /> {$i18n.t('Lieu de Naissance')}
+          <img src="/lieunaissance.png" alt="Lieu Icon" class="icon" /> {$i18n.t('Place of birth')}
         </label>
         <p>-</p>
       </div>
 
       <div class="field" >
         <label style="display: flex;">
-          <img src="/tel.png" alt="Téléphone Icon" class="icon" /> {$i18n.t('Téléphone')}
+          <img src="/tel.png" alt="Téléphone Icon" class="icon" /> {$i18n.t('Phone')}
         </label>
         <p>{selectedcv.Téléphone}</p>
       </div>
@@ -3253,20 +3453,20 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
       <div class="field" >
         <label style="display: flex;">
-          <img src="/diplome.png" alt="Diplôme Icon" class="icon" /> {$i18n.t('Diplôme')}
+          <img src="/diplome.png" alt="Diplôme Icon" class="icon" /> {$i18n.t('Diploma')}
         </label>
         <p>{selectedcv.Niveau}</p>
       </div>
       <div class="field" >
         <label style="display: flex;">
-          <img src="/poste.png" alt="Poste Icon" class="icon" /> {$i18n.t('Poste candidaté')}
+          <img src="/poste.png" alt="Poste Icon" class="icon" /> {$i18n.t('Position applied for')}
         </label>
         <p>-</p>
       </div>
 
       <div class="field" >
         <label style="display: flex;">
-          <img src="/niveau.png" alt="Niveau d'expérience Icon" class="icon" /> {$i18n.t('Niveau d expérience')}
+          <img src="/niveau.png" alt="Niveau d'expérience Icon" class="icon" /> {$i18n.t('Level of experience')}
         </label>
         <p>-</p>
       </div>
@@ -3279,15 +3479,19 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 <div class="popup">
   <div class="popup-content">
     <div style="display: grid; justify-content: center; align-items: center; text-align: center;">
-      <h2 class="popup-title">{$i18n.t('Récapitulatif')}</h2>
+      <h2 class="popup-title">{$i18n.t('Summary')}</h2>
       <span class="close" on:click={closerecap}>&times;</span>
     </div>
   
   
     <!-- Accordion -->
     <div class="accordion">
-      {#each ['Résumé du profil', 'Points forts par rapport au post '+selectedJob?.post_name, 'Points à surveiller par rapport au post '+selectedJob?.post_name] as section, index}
-        <div class="accordion-item">
+      {#each [
+          $i18n.t('Profile Summary'),
+          $i18n.t('Strengths Related to the Position ') + selectedJob?.post_name,
+          $i18n.t('Points to Watch Regarding the Position ') + selectedJob?.post_name
+      ] as section, index}
+                <div class="accordion-item">
           <!-- Accordion Header -->
           <div class="accordion-header" on:click={() => toggleAccordion(index)}>
             {section}
@@ -3337,72 +3541,127 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
           </div>
           
           
-            
-            <div class="responsibilities">
-                <div class="section-title">Responsabilités</div>
-                <ul>
-                    {#each jobdetail.mandatory_skills as responsibility}
-                    <div style="display:flex;">
-                    <div class="icon">
-                      <!-- Replacing the SVG with an image -->
-                      <img src="/check-mark.png" alt="Check Mark" />
-                  </div>
-                  {responsibility}
-                </div>
-                    
-                           
-                        
-                    {/each}
-                </ul>
+          {#if selectedPositionType === "internship"}
+          <div class="responsibilities">
+            <div class="section-title">{$i18n.t('Project description')}</div>
+            <div style="display:flex;">
+            {jobdetail.description}
+          </div>
+        </div>
+          {:else}
+          <div class="responsibilities">
+            <div class="section-title">{$i18n.t('Responsibilities')}</div>
+            <ul>
+                {#each jobdetail.mandatory_skills as responsibility}
+                <div style="display:flex;">
+                <div class="icon">
+                  <!-- Replacing the SVG with an image -->
+                  <img src="/check-mark.png" alt="Check Mark" />
+              </div>
+              {responsibility}
             </div>
+                
+                       
+                    
+                {/each}
+            </ul>
+        </div>
+          {/if}
+
+
 
             <div class="skills">
-                <div class="section-title">Skills</div>
+                <div class="section-title">{$i18n.t('Required Skills')}</div>
                 <div class="skills-container">
-                    {#each jobdetail.optional_skills as skill}
-                        <div class="skill-card">
-                            <div class="icon">
-                              <img src="/percentage.png" alt="Check Mark" />
-                               
-                            </div>
-                            <div class="text-content" style="font-size: 14px;">
-                                <strong>{skill}</strong>
-                                
-                             
-                            </div>
-                        </div>
-                    {/each}
+                  {#if selectedPositionType === "internship"}
+                  {#each jobdetail.mandatory_skills as skill}
+                  <div class="skill-card">
+                    <div class="icon">
+                      <img src="/percentage.png" alt="Check Mark" />
+                       
+                    </div>
+                    <div class="text-content" style="font-size: 14px;">
+                        <strong>{skill}</strong>
+                        
+                     
+                    </div>
+                </div>
+            {/each}
+                  {:else}
+                  {#each jobdetail.optional_skills as skill}
+                  <div class="skill-card">
+                    <div class="icon">
+                      <img src="/percentage.png" alt="Check Mark" />
+                       
+                    </div>
+                    <div class="text-content" style="font-size: 14px;">
+                        <strong>{skill}</strong>
+                        
+                     
+                    </div>
+                </div>
+            {/each}
+                  {/if}
+                 
                 </div>
             </div>
 
             <div class="other">
-              <div class="section-title">Qualifications</div>
+              {#if selectedPositionType === "internship"}
+              <div class="section-title">{$i18n.t('Administrative specifications')}</div>
               <div class="qualifications-card">
               
               
                 <div class="qualification-item">
                   <img src="/graduation.png" alt="Degree Icon" class="icon" />
-                  <span class="label">degree:</span>
+                  <span class="label">{$i18n.t('Degree :')}</span>
+                  <span class="value">{jobdetail.qualifications.degree}</span>
+                </div>
+                <div class="qualification-item">
+                  <img src="/person.png" alt="Experience Icon" class="icon" />
+                  <span class="label">{$i18n.t('Number of profiles :')}</span>
+                  <span class="value">{jobdetail.nb_profiles}</span>
+                </div>
+                <div class="qualification-item">
+                  <img src="/rush.png" alt="Portfolio Icon" class="icon" />
+                  <span class="label">{$i18n.t('Duration :')}</span>
+                  <span class="value">{jobdetail.duration}</span>
+                </div>
+              </div>
+              {:else}
+              <div class="section-title">{$i18n.t('Qualifications')}</div>
+              <div class="qualifications-card">
+              
+              
+                <div class="qualification-item">
+                  <img src="/graduation.png" alt="Degree Icon" class="icon" />
+                  <span class="label">{$i18n.t('Degree :')}</span>
                   <span class="value">{jobdetail.qualifications.degree}</span>
                 </div>
                 <div class="qualification-item">
                   <img src="/exp.png" alt="Experience Icon" class="icon" />
-                  <span class="label">experience:</span>
+                  <span class="label">{$i18n.t('Experience :')}</span>
                   <span class="value">{jobdetail.qualifications.experience}</span>
                 </div>
                 <div class="qualification-item">
                   <img src="/port.png" alt="Portfolio Icon" class="icon" />
-                  <span class="label">portfolio:</span>
+                  <span class="label">{$i18n.t('Portfolio :')}</span>
                   <span class="value">{jobdetail.qualifications.portfolio}</span>
                 </div>
               </div>
-              
+              {/if}
 
             </div>
         </div>
     </div>
 {/if}
 <style>
+
+.ltr-style{
+            direction:rtl;
+              text-align:right;
+              flex-direction: row-reverse;
+          }
 
 .popup-header {
   display: flex;
@@ -3428,7 +3687,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 }
 
 .qualifications-card h3 {
-  color: #168c77;
+  color: #006654;
   margin-bottom: 15px;
   font-weight: 600;
 }
@@ -3447,7 +3706,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
 .qualification-item .label {
   font-weight: bold;
-  color: #168c77;
+  color: #006654;
   margin-right: 5px;
 }
 
@@ -3494,11 +3753,11 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
         top: 10px;
         right: 10px;
         cursor: pointer;
-        color: #168c77;
+        color: #006654;
     }
 
     #popup .section-title {
-        color: #168c77;
+        color: #006654;
         font-size: 18px;
         margin-bottom: 10px;
         font-weight: bold;
@@ -3510,7 +3769,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
 
     #popup .checkmark {
-        color: #168c77;
+        color: #006654;
         margin-right: 10px;
     }
 
@@ -3548,7 +3807,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
 
     #popup .other-card svg {
-        fill: #168c77;
+        fill: #006654;
     }
 
     #popup .text-content {
@@ -3569,7 +3828,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
     th, td {
         padding: 12px;
-       
+       /* border: 1px solid #006654;*/
         text-align: left;
     }
 
@@ -3581,7 +3840,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
 
     td {
-       
+      /*  background-color: #f5f5f5;*/
     }
 
   .custom-info-icon {
@@ -3613,7 +3872,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
 
 .pagination-arrow {
-    background-color: #168c77; /* Fond des boutons de pagination */
+    background-color: #006654; /* Fond des boutons de pagination */
     color: white;
     border: none;
     padding: 5px 10px;
@@ -3630,7 +3889,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   }
 
   .pagination-arrow:hover {
-    background-color: #168c77; /* Couleur au survol */
+    background-color: #006654; /* Couleur au survol */
   }
 
 .text-align-left{
@@ -3708,7 +3967,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
 .titre {
     font-size: 20px; /* Taille du titre */
-    color: #168c77; /* Couleur du titre */
+    color: #006654; /* Couleur du titre */
   }
 
 /* Style pour la popup personnalisée */
@@ -3742,7 +4001,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     right: 20px;
     font-size: 24px;
     cursor: pointer;
-    color:#168c77;
+    color:#006654;
   }
 
   .cadre-pdf {
@@ -3769,7 +4028,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 
   .points-surveiller-table th {
     background-color: #f1fdf9; /* Couleur de fond pour les en-têtes */
-    color: #168c77; /* Texte de l'en-tête */
+    color: #006654; /* Texte de l'en-tête */
   }
 
   .points-surveiller-table tr:nth-child(even) {
@@ -3797,7 +4056,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   }
 
   .accordion-header {
-    background: linear-gradient(135deg, #168c77, #9fd5b5); /* Gradient background */
+    background: linear-gradient(135deg, #006654, #9fd5b5); /* Gradient background */
     padding: 20px;
     font-weight: bold;
     font-size: 18px;
@@ -3810,7 +4069,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   }
 
   .accordion-header:hover {
-    background: linear-gradient(135deg, #9fd5b5, #168c77); /* Reverse gradient on hover */
+    background: linear-gradient(135deg, #9fd5b5, #006654); /* Reverse gradient on hover */
   }
 
   .accordion-content {
@@ -3858,7 +4117,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     width: 10px;
     height: 10px;
     margin: 0 5px;
-    background-color: #168c77;
+    background-color: #006654;
     border-radius: 50%;
   }
 .popup {
@@ -3960,9 +4219,9 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 .select-button {
     padding: 10px 20px;
     margin-top: 20px; /* Assure que le bouton est poussé vers le bas */
-    background-color: #168c77; /* Couleur de fond par défaut */
+    background-color: #006654; /* Couleur de fond par défaut */
     color: white; /* Couleur du texte */
-    border: 1px solid #168c77;
+    border: 1px solid #006654;
     border-radius: 5px; /* Coins arrondis */
     cursor: pointer; /* Curseur en forme de main */
     transition: background-color 0.3s; /* Transition douce pour le changement de couleur */
@@ -3994,11 +4253,11 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   flex-direction: column;
   justify-content: flex-start; /* Maintient les éléments en haut */
   background-color: #ffffff;
-  border: 1px solid #168c77;
+  border: 1px solid #006654;
   border-radius: 10px;
   padding: 20px;
   min-height: 200px;
-  width: calc(45.33% - 30px);
+  width: calc(33% - 30px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
   position: relative; /* Permet l'utilisation de positionnement absolu */
@@ -4038,11 +4297,12 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
   
     .card-title {
+      padding-right: 20px;
         text-align: center;
       font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 10px;
-      color: #168c77;
+      color: #006654;
       display:flex;
     }
   
@@ -4063,10 +4323,10 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
   
     #validateButton {
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
       padding: 10px 20px;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 20px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -4136,13 +4396,13 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
   
     .stepper-item.completed .step-counter {
-        background-color: #168c77;
+        background-color: #006654;
     }
   
     .stepper-item.completed::after {
         position: absolute;
         content: "";
-        border-bottom: 2px solid #168c77;
+        border-bottom: 2px solid #006654;
         width: 100%;
         top: 20px;
         left: 50%;
@@ -4183,7 +4443,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
   
     .bg-color-pag{
-      background-color: #168c77;
+      background-color: #006654;
     }
     .header {
       background-color: #9FD5B5;
@@ -4252,7 +4512,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     }
   
     .mini-title {
-      color: #168c77; /* Couleur pour le titre des sections */
+      color: #006654; /* Couleur pour le titre des sections */
       font-weight: 600;
       font-size: 17px;
       margin-bottom: 10px;
@@ -4263,9 +4523,9 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   
     .Button-confirm {
       padding: 10px 20px;
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
@@ -4280,8 +4540,8 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
     .styled-button {
       padding: 10px 20px;
       background-color: #9FD5B5;
-      color: #168c77;
-      border: 2px solid #168c77;
+      color: #006654;
+      border: 2px solid #006654;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
@@ -4300,7 +4560,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   max-height: 563px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #168c77 #9FD5B5;
+  scrollbar-color: #006654 #9FD5B5;
 }
 
 .info-container {
@@ -4317,7 +4577,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
 
   min-height: 200px;
-  border: 1px solid #168c77;
+  border: 1px solid #006654;
   width: calc(33.33% - 10px);
   box-sizing: border-box;
 }
@@ -4332,13 +4592,13 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   
     .styled-dropdown:focus {
       outline: none;
-      border: 1px solid #168c77;
+      border: 1px solid #006654;
       box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
     .custom-bg {
         background-color: #9FD5B5;
-        border: 2px solid #168c77;
-      color: #168c77;
+        border: 2px solid #006654;
+      color: #006654;
       padding: 10px 20px;
       border-radius: 20px;
       cursor: pointer;
@@ -4352,7 +4612,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
   #validateButton {
     padding: 10px 20px;
     font-size: 16px;
-    background-color: #168c77;
+    background-color: #006654;
     border: none;
     color: white;
     cursor: pointer;
@@ -4375,7 +4635,7 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 }
 
 #validateButton {
-  background-color: #168c77; /* Solid green background */
+  background-color: #006654; /* Solid green background */
   color: white;
   padding: 10px 20px;
   border: none; /* No border */
@@ -4444,13 +4704,13 @@ on:click={() => cv.GoToChat = !cv.GoToChat}
 }
 
 .stepper-item.completed .step-counter {
-    background-color: #168c77;
+    background-color: #006654;
 }
 
 .stepper-item.completed::after {
     position: absolute;
     content: "";
-    border-bottom: 2px solid #168c77;
+    border-bottom: 2px solid #006654;
     width: 100%;
     top: 20px;
     left: 50%;
@@ -4553,7 +4813,7 @@ text-align: center;
 .mini-title{
     width: fit-content;
 
-color: #168c77;
+color: #006654;
 
 border-radius: 3px;
 padding :2px 4px 2px 4px;
@@ -4568,9 +4828,9 @@ padding :2px 4px 2px 4px;
 }
 .Button-confirm {
     padding: 10px 20px;
-    background-color: #168c77;  /* Green background */
+    background-color: #006654;  /* Green background */
     color: #ffffff;
-    border: 2px solid #168c77;  /* Matching green border */
+    border: 2px solid #006654;  /* Matching green border */
     border-radius: 5px;  /* Rounded corners */
     font-weight: bold;
     cursor: pointer;
@@ -4598,8 +4858,8 @@ padding :2px 4px 2px 4px;
     .styled-button {
     padding: 10px 20px;
     background-color: #9FD5B5;  /* Green background */
-    color: #168c77;
-    border: 2px solid #168c77;  /* Matching green border */
+    color: #006654;
+    border: 2px solid #006654;  /* Matching green border */
     border-radius: 5px;  /* Rounded corners */
     font-weight: bold;
     cursor: pointer;
@@ -4616,7 +4876,7 @@ padding :2px 4px 2px 4px;
 /* Hover effect */
 .styled-button:hover {
     background-color: #9FD5B5;
-    color: #168c77;
+    color: #006654;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -4638,7 +4898,7 @@ padding :2px 4px 2px 4px;
     overflow-y: auto; /* Active un scroll vertical */
     /* Styles pour la scrollbar */
     scrollbar-width: thin; /* Pour Firefox */
-    scrollbar-color: #168c77 #9FD5B5;/* Couleur du curseur et du fond pour Firefox */
+    scrollbar-color: #006654 #9FD5B5;/* Couleur du curseur et du fond pour Firefox */
 }
 
 
@@ -4652,12 +4912,12 @@ padding :2px 4px 2px 4px;
   .selected {
     padding: 10px 20px;
     margin-top: auto; /* Assure que le bouton est poussé vers le bas */
-    border: 1px solid #168c77;
+    border: 1px solid #006654;
     border-radius: 5px; /* Coins arrondis */
     cursor: pointer; /* Curseur en forme de main */
     transition: background-color 0.3s; /* Transition douce pour le changement de couleur */
     background-color: #ffffff; /* Couleur pour le bouton sélectionné */
-    color: #168c77; /* Couleur du texte pour le bouton sélectionné */
+    color: #006654; /* Couleur du texte pour le bouton sélectionné */
 }
 
 
@@ -4670,12 +4930,12 @@ padding :2px 4px 2px 4px;
 
 .styled-dropdown:focus {
     outline: none; /* Supprime la bordure par défaut */
-    border: 1px solid #168c77; /* Ajoute une petite bordure avec la couleur souhaitée */
+    border: 1px solid #006654; /* Ajoute une petite bordure avec la couleur souhaitée */
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);  /* Adds a shadow on hover */
 }
 
 .bckclr{
-    background-color: #168c77;
+    background-color: #006654;
     color:white;
 }
 
@@ -4693,14 +4953,14 @@ padding :2px 4px 2px 4px;
     height: 300px;
     width: 420px;
     background-color: #ffffff;
-    border: 1px solid #168c77;
+    border: 1px solid #006654;
     border-radius: 10px;
     box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
 }
   .delete-skill-btn {
   background-color: transparent;
   border: none;
-  color: #168c77;
+  color: #006654;
   font-size: 14px;
   cursor: pointer;
   padding: 0 8px;
@@ -4762,7 +5022,7 @@ padding :2px 4px 2px 4px;
     font-size: 14px;
     margin-right: 10px;
     background-color: #f1fdf9; /* Couleur de fond */
-    border: 1px solid #168c77; /* Bordure de 1px, couleur personnalisée et style plein */
+    border: 1px solid #006654; /* Bordure de 1px, couleur personnalisée et style plein */
 }
 
   .input-spacing {
@@ -4814,11 +5074,11 @@ padding :2px 4px 2px 4px;
   flex-direction: column;
   justify-content: flex-start; /* Maintient les éléments en haut */
   background-color: #ffffff;
-  border: 1px solid #168c77;
+  border: 1px solid #006654;
   border-radius: 10px;
   padding: 20px;
   min-height: 200px;
-  width: calc(45.33% - 30px);
+  width: calc(33% - 30px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
   position: relative; /* Permet l'utilisation de positionnement absolu */
@@ -4881,7 +5141,7 @@ padding :2px 4px 2px 4px;
       font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 10px;
-      color: #168c77;
+      color: #006654;
     }
     
     .skills-section {
@@ -4902,10 +5162,10 @@ padding :2px 4px 2px 4px;
 
 
     #validateButton {
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
       padding: 10px 20px;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 20px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -4956,7 +5216,7 @@ padding :2px 4px 2px 4px;
     }
     
     .mini-title {
-      color: #168c77; /* Couleur pour le titre des sections */
+      color: #006654; /* Couleur pour le titre des sections */
       font-weight: 600;
       font-size: 1.2rem;
       margin-bottom: 10px;
@@ -4966,9 +5226,9 @@ padding :2px 4px 2px 4px;
     
     .Button-confirm {
       padding: 10px 20px;
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
@@ -4983,8 +5243,8 @@ padding :2px 4px 2px 4px;
     .styled-button {
       padding: 10px 20px;
       background-color: #F2F7FF;
-      color: #168c77;
-      border: 2px solid #168c77;
+      color: #006654;
+      border: 2px solid #006654;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
@@ -5015,7 +5275,7 @@ padding :2px 4px 2px 4px;
   max-height: 563px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #168c77 #9FD5B5;
+  scrollbar-color: #006654 #9FD5B5;
 }
 
 
@@ -5033,7 +5293,7 @@ padding :2px 4px 2px 4px;
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
 
   min-height: 100px;
-  border: 1px solid #168c77;
+  border: 1px solid #006654;
   width: calc(33.33% - 10px);
   box-sizing: border-box;
 }
@@ -5043,7 +5303,7 @@ padding :2px 4px 2px 4px;
       width: 100%;
       padding: 8px;
       border-radius: 5px;
-      border:1px solid #168c77;
+      border:1px solid #006654;
 
       transition: box-shadow 0.3s ease;
     }
@@ -5051,13 +5311,13 @@ padding :2px 4px 2px 4px;
     
     .styled-dropdown:focus {
       outline: none;
-      border: 1px solid #168c77;
+      border: 1px solid #006654;
       box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
     .custom-bg {
         background-color: #9FD5B5;
-    border: 2px solid #168c77;
-      color: #168c77;
+    border: 2px solid #006654;
+      color: #006654;
       padding: 10px 20px;
       border-radius: 20px;
       cursor: pointer;
@@ -5066,8 +5326,8 @@ padding :2px 4px 2px 4px;
 
     .button-plus{
         background-color: #9FD5B5;
-    border: 2px solid #168c77;
-      color: #168c77;
+    border: 2px solid #006654;
+      color: #006654;
       padding: 10px 10px;
       border-radius: 15px;
       cursor: pointer;
@@ -5094,7 +5354,7 @@ padding :2px 4px 2px 4px;
     height: 150px;
     border-radius: 50%;
     border: 5px solid rgba(22, 140, 119, 0.2);
-    border-top: 5px solid #168c77;
+    border-top: 5px solid #006654;
     animation: spin 2s linear infinite;
     background-color: white;
     display: flex;
@@ -5113,7 +5373,6 @@ padding :2px 4px 2px 4px;
 }
 
 </style>
-
 
 
 

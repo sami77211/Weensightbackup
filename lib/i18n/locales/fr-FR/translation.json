@@ -26,8 +26,10 @@
 	"Add Docs": "Ajouter de la documentation",
 	"Add Files": "Ajouter des fichiers",
 	"Add Memory": "Ajouter de la mémoire",
+	"Themes":"Thèmes",
 	"Add message": "Ajouter un message",
 	"Add Model": "Ajouter un modèle",
+	"Document processing":"traitement document",
 	"Add Tag": "Ajouter une étiquette",
 	"Add Tags": "Ajouter des étiquettes",
 	"Add User": "Ajouter un Utilisateur",
@@ -769,7 +771,7 @@
 	"Collections": "Collections",
 	"Select a collection": "Sélectionnez une collection",
 	"Add Collection": "Ajouter une collection",
-	"Drop Your files Here": "Déposez vos fichiers ici",
+	"Drop Your file Here": "Déposez vos fichiers ici",
 	"Maximum file size 5 MB": "Taille maximale du fichier : 5 Mo",
 	"Please select a category before uploading files": "Veuillez sélectionner une catégorie avant de télécharger des fichiers.",
 	"Error fetching categories": "Erreur lors de la récupération des catégories",
@@ -874,7 +876,7 @@
     "Please select a collection":"Veuillez sélectionner Une Collection",
     "Please select a position before proceeding to step 3.":"Veuillez sélectionner un poste avant de passer à l'étape 3.",
     "Please select at least one CV.":"Veuillez sélectionner au moins un CV.",
-    "Select your CVs for the internship offer :":"Sélectionner vos CVs pour l offre de stage :",
+    "Select your CVs for the internship offer":"Sélectionner vos CVs pour l offre de stage :",
     "Select the collection":"Sélectionnez la Collection",
     "Add a collection":"Ajouter Une collection",
     "Name of the collection":"Nom de la collection",
@@ -1002,21 +1004,87 @@
     "Group successfully deleted.":"Groupe supprimé avec succès.",
     "Failed to delete the group.":"Impossible de supprimer le groupe.",
     "The group already exists.":"Le groupe existe déjà.",
-	"Expert Panel":"Panneau d'experts"
-
-    
-
-
-	
-	
-
+	"Expert Panel":"Panneau d'experts",
 	
 
 
 
 
-
 	
+	"Are you sure you want to delete the group {{groupName}}?":"Êtes-vous sûr de vouloir supprimer le groupe {{groupName}}?",
+	"Update Group": "Mettre à jour le groupe",
+	"Group Details": "Détails du groupe",
+	"Add Group": "Ajouter un groupe",
+	
+	"Group successfully added!": "Groupe ajouté avec succès !",
+	"Failed to add the group.": "Échec de l'ajout du groupe.",
+	"Please fill all fields before adding a group.": "Veuillez remplir tous les champs avant d'ajouter un groupe.",
+	"Enter the name of the group":"Entrez le nom du groupe",
+	"Sélectionnez vos CV pour l'offre de stage :":"Sélectionnez vos CV pour l'offre de stage",
+	"No candidate selected to go to the chatbot.":"Aucun candidat sélectionné pour aller au chatbot.",
+	"The collection has been successfully added!":"La collection a été ajoutée avec succès !",
+	"File Uploaded successfully!":"Fichier Chargé avec succès!",
+	"Position Search":"Recherche des Postes",
+	"Job Description :":"Description Du Poste :",
+	"Your position":"Votre poste",
+	"Add your position Title":"Ajoutez le titre de votre poste",
+	"Add your position description":"Ajoutez votre description de poste",
+	"Qualifications":"Qualifications",
+	"Degree":"Diplôme",
+	"Degree :":"Diplôme :",
+	"Experience :":"Expérience :",
+	"Experience":"Expérience",
+	"Portfolio :":"Portefeuille :",
+	"Portfolio":"Portefeuille",
+	"Add your Degree":"Ajoutez votre diplôme",
+	"Add your Experience":"Ajoutez votre expérience",
+	"Add Your Portfolio":"Ajoutez votre portfolio",
+	"Responsibilities":"Responsabilités",
+	"No Responsibilities":"Aucune responsabilité",
+	"Enter Your responsibilities":"Entrez vos responsabilités",
+	"Required Skills":"Compétences requises",
+	"No Required Skills":"Aucune compétence requise",
+	"Add Required Skills":"Ajoutez des compétences requises",
+	"Enter your responsibilities":"Entrez vos responsabilités",
+	"Enter a responsibility":"Entrez une responsabilité",
+	"Enter a Required Skill":"Entrez une compétence requise",
+	"Add your required skills":"Ajoutez vos compétences requises",
+	"Enter a required skill":"Entrez une compétence requise",
+	"Skills":"Compétences ",
+	"Project description":"Description du projet",
+	"Duration":"Durée",
+	"Duration :":"Durée :",
+	"Number of profiles":"Nombre de profils",
+	"Number of profiles :":"Nombre de profils :",
+	"Administrative specifications":"Spécifications administratives",
+    "Add your position title":"Ajoutez votre titre de poste",
+	"Position title":"Titre du poste",
+	"Position Description":"Description de poste",
+	"Add the number of profiles":"Ajouter le nombre de profils",
+	"Add your duration":"Ajouter la durée",
+	"No required skills":"Aucune compétence requise",
+	"Choose your topic":"Choisissez votre sujet",
+	"Please select a topic.":"Veuillez sélectionner un sujet.",
+	"Your topic":"Votre sujet",
+	"Topic Description":"Description du sujet",
+	"Topic Description :":"Description du sujet :",
+	"Topic title":"Titre du sujet",
+	"Add your topic title":"Ajouter le titre de votre sujet",
+	"Add your topic description":"Ajouter la description de votre sujet",
+	"Add topic +":"Ajouter un sujet +",
+	"Enter Your skills":"Entrez vos compétences",
+	"Enter a skill":"Entrez une compétence",
+	"Please fill all fields before updating a topic.":"Veuillez remplir tous les champs avant de mettre à jour un sujet.",
+	"Download your files":"Téléchargez vos fichiers",
+	"Powered by":"Propulsé par",
+	"Candidate":"Candidat",
+	"Your file is uploaded": "Votre fichier est téléchargé",
+	"next": "Suivant",
+	"Your file has been uploaded successfully": "Votre fichier a été téléchargé avec succès",
+	"Put subdivision number for each page": "Mettez le numéro de subdivision pour chaque page",
+	"Treated Document": "Document traité"
+  
+
 
 
 

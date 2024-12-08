@@ -63,6 +63,13 @@
 	import Navbar from '$lib/components/layout/Navbar.svelte';
 	import ChatControls from './ChatControls.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
+	import { writable } from 'svelte/store';
+
+	interface Client {
+  id: number;
+  name: string;
+  visible: boolean;
+}
 
 
 
@@ -88,7 +95,7 @@
 
 	let showModelSelector = true;
 
-	let selectedModels = [''];
+	let selectedModels = ['llama3.2-vision:11b'];
 	let atSelectedModel: Model | undefined;
 
 	let selectedModelIds = [];
@@ -248,8 +255,11 @@
 			}
 		}
 	};
+	
 	let chatCandidates = [];
 	onMount(async () => {
+		  // Abonnez-vous au store clients pour obtenir sa valeur et faites une recherche
+	
 
 
 
@@ -524,6 +534,7 @@
 	//////////////////////////
 
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
+		
 		let _responses = [];
 		console.log('submitPrompt', $chatId);
 
@@ -533,6 +544,7 @@
 
 		if (selectedModels.includes('')) {
 			toast.error($i18n.t('Model not selected'));
+
 		} else if (messages.length != 0 && messages.at(-1).done != true) {
 			// Response not done
 			console.log('wait');
@@ -1769,10 +1781,11 @@
 		{/if}
 
 		<div class="flex flex-col flex-auto z-10 light-green-bg">
+			
 			<div
-				class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden {showControls
+				class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden{showControls
 					? 'lg:pr-[24rem]'
-					: ''}"
+					: ''} {$i18n.language === 'ar-BH' ? 'rtl-style' : ''} "
 				id="messages-container"
 				bind:this={messagesContainerElement}
 				on:scroll={(e) => {
@@ -1853,6 +1866,19 @@
 
 
 <style>
+	.rtl-style {
+  direction: rtl;  /* Aligne les éléments de droite à gauche */
+  text-align: right; /* Aligne le texte à droite */
+}
+.ltr-style{
+	flex-direction: row-reverse !important;
+}
+
+
+.inverted {
+  display: flex;
+  flex-direction: column-reverse; /* Inverse l'ordre des éléments dans la colonne */
+}
 	.light-green-bg {
 		background-color: #f1fdf9; /* Vert encore plus léger */
 }

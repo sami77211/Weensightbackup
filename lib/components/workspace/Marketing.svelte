@@ -246,6 +246,14 @@
   }
   const i18n = getContext('i18n');
 
+  function formatDate(isoDate) {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('fr-FR', options);
+}
+
+
+
     </script>
 
 
@@ -275,7 +283,7 @@
     font-size: 14px;
     font-weight: bold;
     text-decoration: none;
-    color: #168c77; /* Couleur du lien */
+    color: #006654; /* Couleur du lien */
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -496,7 +504,7 @@
     }
 
     .response-button {
-      background-color: #168c77;
+      background-color: #006654;
       
       color: white;
       padding: 10px 20px;
@@ -586,7 +594,7 @@
   height: 17px;
 }
     .pagination-arrow {
-      background-color: #168c77; /* Fond des boutons de pagination */
+      background-color: #006654; /* Fond des boutons de pagination */
       color: white;
       border: none;
       padding: 5px 10px;
@@ -626,7 +634,7 @@
 
     .info-title {
       font-weight: bold;
-      color: #168c77; /* Couleur verte pour le titre */
+      color: #006654; /* Couleur verte pour le titre */
       margin-bottom: 5px;
       display: block; /* Assurer que le titre occupe toute la largeur disponible */
     }
@@ -668,7 +676,7 @@
     align-items: center;
     width: 32px; /* Set the width */
     height: 32px; /* Set the height */
-    border: 2px solid #168c77; /* Green border */
+    border: 2px solid #006654; /* Green border */
     border-radius: 50%; /* Make it circular */
     cursor: pointer;
     padding: 4px;
@@ -746,6 +754,12 @@ table {
     text-align: left;
   }
 
+  /* Si la langue est arabe (droite) */
+.ar-lang th, .ar-lang td {
+  text-align: right;
+  border-left: none; /* Supprimer la bordure gauche */
+  border-right: 1px solid #ccc; /* Ajouter une bordure droite */
+}
   th {
     background-color: #f4f4f4;
   }
@@ -832,7 +846,7 @@ table {
 blockquote {
   background-color: #f1fdf9;
   padding: 15px;
-  border-left: 5px solid #168c77;
+  border-left: 5px solid #006654;
     
   border-radius: 10px;
   margin-top: 15px;
@@ -999,7 +1013,7 @@ button.flex.items-center {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #168c77; /* Couleur du bouton */
+    background-color: #006654; /* Couleur du bouton */
     color: white; /* Couleur du texte */
     font-size: 14px;
     font-weight: bold;
@@ -1043,16 +1057,16 @@ button.flex.items-center {
     />
 
   </div>
-  
+  <div class={$i18n.language === 'ar-BH' ? 'ar-lang' : ''}>
   <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto max-w-full s-FoVA_WMOgxUD">
     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-850 dark:text-gray-400 s-FoVA_WMOgxUD">
       <tr class="s-FoVA_WMOgxUD">
         <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
         on:click={() => sortMessages('date')} 
-        style="text-align: center; border: none; border-radius: 15px 0 0 0; text-transform: none; background-color:#9FD5B5">
+        style="text-align: center; border: none; border-radius: {$i18n.language === 'ar-BH'? '0px 15px 0px 0px' :'15px 0px 0 0'};  text-transform: none; background-color:#9FD5B5">
         {$i18n.t('Date')} {  (dateSortOrder === 'asc' ? '↑' : '↓')}
     </th>
-    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">{$i18n.t('Nom')}</th>
+    <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">{$i18n.t('Name')}</th>
     <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" 
     on:click={() => {
       urgencySortOrder = urgencySortOrder === 'asc' ? 'desc' : 'asc';
@@ -1068,7 +1082,7 @@ button.flex.items-center {
     </th>
 
         <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; text-transform: none; background-color:#9FD5B5">{$i18n.t('Beginning of the message')}</th>
-        <th class="px-3 py-2 cursor-pointer select-none s-FoVA_WMOgxUD" style="text-align: center; border: none; border-radius: 0 15px 0 0; text-transform: none; background-color:#9FD5B5">{$i18n.t('Details')}</th>
+        <th class="px-3 py-2 cursor-pointer select-none {$i18n.language === 'ar-BH' ? 'ar-lang' : ''}s-FoVA_WMOgxUD" style="text-align: center; border: none;  border-radius: {$i18n.language === 'ar-BH' ? '15px 0px 0px 0px' : '0px 15px 0px 0px'};  text-transform: none; background-color:#9FD5B5">{$i18n.t('Details')}</th>
         
       </tr>
     </thead>
@@ -1132,7 +1146,7 @@ button.flex.items-center {
             on:click={() => selectMessage(message)} 
             class:selected={message === selectedMessage}
           >
-            <td style="text-align: center; border-right: none;">{message.date}</td>
+            <td style="text-align: center; border-right: none;">{formatDate(message.date)}</td>
             <td style="text-align: center; border-left: none; border-right: none;">{message.sender}</td>
             <td style="text-align: center; display: flex; justify-content: center; align-items: center; border: none;">
               <button 
@@ -1170,9 +1184,11 @@ button.flex.items-center {
     </tbody>
     
   </table>
+</div>
   
-
+<div class="{$i18n.language === 'ar-BH' ? 'ltr' : ''}">
 	<Pagination bind:page count={messages.length} />
+</div>
 
 </div>
 
@@ -1344,7 +1360,7 @@ button.flex.items-center {
           {#if selectedMessage}
             <div class="info-container">
               <div class="info-box">
-                <strong>Date de réception :</strong> {selectedMessage.date}
+                <strong>Date de réception :</strong> {formatDate(selectedMessage.date)}
               </div>
               <div class="info-box">
                 <strong>Canal de réception :</strong> {selectedMessage.channel}

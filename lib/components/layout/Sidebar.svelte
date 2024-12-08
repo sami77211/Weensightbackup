@@ -264,7 +264,7 @@
     id="sidebar"
     class="sidebar h-screen max-h-[100dvh] min-h-screen select-none {$showSidebar
         ? 'md:relative w-[260px]'
-        : '-translate-x-[260px] w-[0px]'} bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-200 text-sm transition fixed z-50 top-0 left-0 rounded-r-2xl"
+        : '-translate-x-[260px] w-[0px]'} bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-200 text-sm transition fixed z-50 top-0 left-0 rounded-r-2xl {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}"
     data-state={$showSidebar}
 >
 
@@ -274,9 +274,7 @@
 			: 'invisible'}"
 	>
 		<div class="px-2.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400">
-			
-		
-			
+	
 			<button
 			class="cursor-pointer px-2 py-2 flex rounded-xl hover:bg-gray-700 dark:hover:bg-gray-900 transition"
 			on:click={() => {
@@ -300,18 +298,8 @@
 				</svg>
 			</div>
 		</button>
-
-		
-		<img src="/weensight_circle.png" alt="Weensight Logo" class="logo" />
-
-		
-		
-		</div>
-
-
-
-
-		
+		<img src="/star_logo.png" alt="Weensight Logo" class="logo" />
+		</div>		
 		<div class="px-2.5 flex justify-center text-white dark:text-white">
 			<a
 				class="flex-grow flex space-x-3 rounded-xl px-2.5 py-2 hover:bg-gray-700 dark:hover:bg-gray-900 transition"
@@ -391,15 +379,6 @@
 		</div>
 
 
-
-		
-
-		
-		
-
-
-
-
 			<div class="px-2.5 flex justify-center text-white dark:text-white">
 
 		</div>
@@ -414,8 +393,8 @@
 				></div>
 			{/if}
 
-			<div class="px-2 mt-0.5 mb-2 flex justify-center space-x-2">
-				<div class="flex w-full rounded-xl" id="chat-search">
+			<div class="px-2 mt-0.5 mb-2 flex justify-center space-x-2 ">
+				<div class="flex w-full rounded-xl {$i18n.language === 'ar-BH' ? 'ltr-style' : ''}" id="chat-search">
 					<div class="self-center pl-3 py-2 rounded-l-xl bg-transparent recherche">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -613,11 +592,47 @@
 					</UserMenu>
 				{/if}
 			</div>
+			<div class="border-t-2 border-gray-500 my-4"></div>
+
+			<div style="display: flex; align-items: center; justify-content: center; gap: 10px;"> 
+				<div class="text-center text-white opacity-50">
+					{$i18n.t('Powered by')}
+				  </div>				  
+				<img src="/weensight_circle.png" alt="Weensight Logo"  style="height: 30px;"/>
+			  </div>
+			  
+
 		</div>
 	</div>
+	
+
+
 </div>
 
 <style>
+
+.rtl-style {
+  direction: rtl;  /* Aligne les éléments de droite à gauche */
+  text-align: right; /* Aligne le texte à droite */
+}
+.ltr-style{
+	flex-direction: row-reverse !important;
+}
+
+
+.inverted {
+  display: flex;
+  flex-direction: column-reverse; /* Inverse l'ordre des éléments dans la colonne */
+}
+.bg-gray-50 {
+  background-color: rgb(249 249 249 / 0.5); /* Couleur de fond avec opacité */
+}
+
+.bg-gray-200 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(227 227 227 / 0.5);
+}
+
 	.scrollbar-hidden:active::-webkit-scrollbar-thumb,
 	.scrollbar-hidden:focus::-webkit-scrollbar-thumb,
 	.scrollbar-hidden:hover::-webkit-scrollbar-thumb {
@@ -627,12 +642,12 @@
 		visibility: hidden;
 	}
 	.sidebar {
-		background: linear-gradient(90.31deg, #168c77 11.79%, #168c77 102.59%);
+		background: linear-gradient(90.31deg, #006654 11.79%, #006654 102.59%);
 		  color: white; /* Change text color to white */
 	}
 	.logo {
 	margin-top: 10px;
-  	height: 40px; /* Ajustez la hauteur selon vos besoins */
+	height: 50px;/* Ajustez la hauteur selon vos besoins */
 	
 }
 

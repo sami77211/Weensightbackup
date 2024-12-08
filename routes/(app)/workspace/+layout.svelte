@@ -25,11 +25,13 @@
 </svelte:head>
 
 {#if loaded}
+
 	<div
 		class="flex flex-col w-full min-h-screen max-h-screen  {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'
-			: ''} bg-light-green"
+			: ''} bg-light-green {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}"
 	>
+
 		<div class="px-4 pt-3 mt-0.5 mb-1 header">
 			<div class="flex items-center gap-1">
 				<div class="{$showSidebar ? 'md:hidden' : ''} mr-1 self-start flex flex-none items-center">
@@ -114,6 +116,17 @@
 					{$i18n.t('HR')}
 				</a>
 				{/if}
+				{#if $user.role==='admin'}
+
+				<a
+					class="min-w-fit rounded-lg p-1.5 px-3 {$page.url.pathname.includes('/workspace/TraitementDoc')
+						? 'bg-dark-green text-white'
+						: ''} transition"
+					href="/workspace/TraitementDoc"
+				>
+					{$i18n.t('Document processing')}
+				</a>
+				{/if}
 	
 			</div>
 		
@@ -121,7 +134,7 @@
 
 		<hr class="dark:border-gray-850 topmenu	" />
 
-		<div class="py-1 px-5 flex-1 max-h-full overflow-y-auto BckColor">
+		<div class="py-1 px-5 flex-1 max-h-full overflow-y-auto BckColor {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}">
 			<slot />
 		</div>
 	</div>
@@ -129,6 +142,20 @@
 
 <style>
 
+
+.rtl-style {
+  direction: rtl;  /* Aligne les éléments de droite à gauche */
+  text-align: right; /* Aligne le texte à droite */
+}
+.ltr-style{
+	flex-direction: row-reverse !important;
+}
+
+
+.inverted {
+  display: flex;
+  flex-direction: column-reverse; /* Inverse l'ordre des éléments dans la colonne */
+}
 
 	/* Couleur de fond verte foncée pour l'élément sélectionné */
 	.bg-dark-green {

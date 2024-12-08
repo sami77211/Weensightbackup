@@ -284,7 +284,7 @@ updateFilteredDocuments();
     height: 150px;
     border-radius: 50%;
     border: 5px solid rgba(22, 140, 119, 0.2);
-    border-top: 5px solid #168c77;
+    border-top: 5px solid #006654;
     animation: spin 2s linear infinite;
     background-color: white;
     display: flex;
@@ -344,12 +344,12 @@ input[type="text"] {
 }
 
 input[type="text"]:focus {
-    border-color: #168c77; /* Change la couleur de la bordure au focus */
+    border-color: #006654; /* Change la couleur de la bordure au focus */
 }
 
     /* Primary, secondary, and tertiary colors */
     :root {
-        --primary-color: #168c77;
+        --primary-color: #006654;
         --secondary-color: #9FD5B5;
         --tertiary-color: #f1fdf9;
     }
@@ -432,7 +432,7 @@ input[type="text"]:focus {
      
         border-radius: 8px;
         background-color: white;
-        color: #168c77;
+        color: #006654;
 		font-weight: bold;
         font-size: 14px;
         outline: none;

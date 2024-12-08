@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
+	
 	const dispatch = createEventDispatcher();
+	import clients from "./Chat.svelte";
 
 	import {
 		type Model,
@@ -238,7 +240,9 @@ let chatCandidates: DocumentRH[] = [];
 
 
 	onMount(() => {
+
 		themee="Demande information"
+		
 
 		const params = new URLSearchParams(window.location.search);
 
@@ -394,7 +398,7 @@ selectedNameex="";
 			{#if themee}
 
 
-			<div class="theme-container{ $i18n.language === 'ar-BH' ? 'rtl-style' : '' }" style="margin-bottom: 3px;">
+			<div class="theme-container{ $i18n.language === 'ar-BH' ? ' rtl-style' : '' }" style="margin-bottom: 3px;">
 				  <span > {$i18n.t(	'Your theme is @')} <span class="theme-text"> {themee}</span></span>
 				<!-- <button class="close-button" on:click={() => themee = ''}>X</button> -->
 
@@ -696,7 +700,7 @@ selectedNameex="";
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
 												viewBox="0 0 16 16"
-												fill="#168c77"
+												fill="#006654"
 												class="size-5 "
 											>
 												<path
@@ -716,6 +720,7 @@ selectedNameex="";
 									placeholder={chatInputPlaceholder !== ''
 										? chatInputPlaceholder
 										: $i18n.t('Send a Message')}
+									style={$i18n.language === 'ar-BH' ? 'text-align: right;' : 'text-align: left;'}
 									bind:value={prompt}
 									on:keypress={(e) => {
 
@@ -885,6 +890,7 @@ selectedNameex="";
 
 								<div class="self-end mb-2 flex space-x-1 mr-1">
 									{#if messages.length == 0 || messages.at(-1).done == true}
+									
 										<Tooltip content={$i18n.t('Record voice')}>
 											<button
 												id="voice-input-button"
@@ -920,7 +926,7 @@ selectedNameex="";
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
 													viewBox="0 0 20 20"
-													fill="#168c77"
+													fill="#006654"
 													class="w-5 h-5 translate-y-[0.5px]"
 												>
 													<path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />
@@ -938,6 +944,7 @@ selectedNameex="";
 							{#if messages.length == 0 || messages.at(-1).done == true}
 								{#if prompt === ''}
 									<div class=" flex items-center mb-1">
+										
 										<Tooltip content={$i18n.t('Call')}>
 											<button
 												class=" text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 transition rounded-full p-2 self-center "
@@ -979,6 +986,7 @@ selectedNameex="";
 												<Headphone className="size-6 " />
 											</button>
 										</Tooltip>
+										
 									</div>
 								{:else}
 									<div class=" flex items-center mb-1">
@@ -994,7 +1002,7 @@ selectedNameex="";
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
 													viewBox="0 0 16 16"
-													fill="#168c77"
+													fill="#006654"
 													class="size-6"
 												>
 													<path
@@ -1018,7 +1026,7 @@ selectedNameex="";
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
 											viewBox="0 0 24 24"
-											fill="#168c77"
+											fill="#006654"
 											class="size-6"
 										>
 											<path
@@ -1043,16 +1051,25 @@ selectedNameex="";
 </div>
 
 <style>
-		.rtl-style{
-				direction:rtl;
-				  text-align:right;
-				  flex-direction: row-reverse;
-			  }
+
+.rtl-style {
+  direction: rtl;  /* Aligne les éléments de droite à gauche */
+  text-align: right; /* Aligne le texte à droite */
+}
+.ltr-style{
+	direction: ltr;  /* Aligne les éléments de droite à gauche */
+	text-align: right; /* Aligne le texte à droite */
+
+}
+.inverted {
+  display: flex;
+  flex-direction: column-reverse; /* Inverse l'ordre des éléments dans la colonne */
+}
 			
 .theme-container {
         background-color: white; /* Couleur de fond du conteneur */
         border-radius: 10px 10px 0 0; /* Bordure arrondie en haut à gauche et à droite */
-        border: 1px solid #168c77; /* Bordure de couleur primaire */
+        border: 1px solid #006654; /* Bordure de couleur primaire */
         padding: 10px; /* Espacement à l'intérieur du conteneur */
         display: inline-flex; /* Permet d'afficher le conteneur de manière inline */
         align-items: center; /* Centre le contenu verticalement */
@@ -1060,7 +1077,7 @@ selectedNameex="";
     }
 
     .theme-text {
-        color: #168c77; /* Couleur primaire du texte */
+        color: #006654; /* Couleur primaire du texte */
         font-weight: 500; /* Poids de police pour le texte en gras */
     }
 
@@ -1068,7 +1085,7 @@ selectedNameex="";
 
     .close-button {
         background-color: transparent; /* Fond transparent */
-        color: #168c77; /* Couleur primaire */
+        color: #006654; /* Couleur primaire */
         border: none; /* Pas de bordure */
         cursor: pointer; /* Changement du curseur au survol */
         font-size: 18px; /* Taille de la police pour le bouton */
@@ -1089,7 +1106,7 @@ selectedNameex="";
     background-color: white;
   }
   .btn{
-	background-color: #168c77;
+	background-color: #006654;
   }
 
   .btn_background{

@@ -93,7 +93,7 @@
     }
   }}
 >
-  <Tooltip content={$i18n.t('thémes')}>
+  <Tooltip content={$i18n.t('Themes')}>
     <slot />
   </Tooltip>
 

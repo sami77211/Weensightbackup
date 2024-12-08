@@ -7,7 +7,7 @@
 	xmlns="http://www.w3.org/2000/svg"
 	viewBox="0 0 24 24"
 	stroke="currentColor"
-	fill="#168c77"
+	fill="#006654"
 	class={className}
 	stroke-width={strokeWidth}
 >

@@ -105,7 +105,7 @@
 			}}
 		>
 			<DocumentArrowUpSolid />
-			<div class=" line-clamp-1">{$i18n.t('Téléchargez vos fichiers')}</div> <!-- Changed label here -->
+			<div class=" line-clamp-1">{$i18n.t('Download your files')}</div> <!-- Changed label here -->
 		</DropdownMenu.Item>
 
 		

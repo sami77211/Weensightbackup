@@ -22,7 +22,7 @@
 		<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 16 16"
-		fill="#168c77"
+		fill="#006654"
 		class="size-3 m-auto self-center translate-y-[0.3px] translate-x-[3px] "
 	>
 		<path
@@ -40,6 +40,6 @@
 		.btn{
 
 
-			background-color: #168c77;
+			background-color: #006654;
 		}
 	</style>

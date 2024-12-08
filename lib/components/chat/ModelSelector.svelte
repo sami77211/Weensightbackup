@@ -32,14 +32,31 @@
 			$models.map((m) => m.id).includes(model) ? model : ''
 		);
 	}
+	
+
+
+	const saveweensightmodel = async () => {	
+	    
+		settings.set({ ...$settings, models: selectedModels });
+		await updateUserSettings(localStorage.token, { ui: $settings });
+
+		toast.success($i18n.t('Default model updated'));
+	};
+
+	$: if (selectedModels.length > 0 && $models.length > 0) {
+		selectedModels = selectedModels.map((model) =>
+			$models.map((m) => m.id).includes(model) ? model : ''
+		);
+	}
 
 
 
 	  // Fonction qui s'exécute lors du montage du composant
 	  onMount(() => {
-		selectedModels = ['llama3.2-vision:11b', ...selectedModels];
+	
+		//selectedModels = ['llama3.2-vision:11b', ...selectedModels];
 		//selectedModels = [...selectedModels, '']; // Create a new array with the new model
-	//	saveDefaultModel();
+		//saveweensightmodel();
   });
 
 </script>
@@ -81,7 +98,7 @@
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								fill="#168c77"
+								fill="#006654"
 								viewBox="0 0 24 24"
 								stroke-width="2"
 								stroke="currentColor"
@@ -105,7 +122,7 @@
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								fill="#168c77"
+								fill="#006654"
 								viewBox="0 0 24 24"
 								stroke-width="2"
 								stroke="currentColor"

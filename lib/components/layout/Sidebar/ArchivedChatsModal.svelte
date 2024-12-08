@@ -140,7 +140,7 @@
 
 												<td class=" px-3 py-1 hidden md:flex h-[2.5rem]">
 													<div class="my-auto">
-														{dayjs(chat.created_at * 1000).format($i18n.t('MMMM DD, YYYY HH:mm'))}
+														{dayjs(chat.created_at * 1000).format('MMMM DD, YYYY h:mm A')}
 													</div>
 												</td>
 

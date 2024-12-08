@@ -4,6 +4,12 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import type { i18n as i18nType } from 'i18next';
 import { writable } from 'svelte/store';
 
+// clients.js
+export const clients = [
+	{ id: 1, name: 'Star', visible: false },
+	{ id: 2, name: 'Société Y', visible: false },
+	{ id: 3, name: 'Société Z', visible: true },
+  ];
 const createI18nStore = (i18n: i18nType) => {
 	const i18nWritable = writable(i18n);
 

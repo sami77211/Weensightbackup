@@ -32,9 +32,9 @@
 	<div
 		class="flex flex-col w-full min-h-screen max-h-screen {$showSidebar
 			? 'md:max-w-[calc(100%-260px)]'
-			: ''} header"
+			: ''} header "
 	>
-		<div class="px-4 pt-3 mt-0.5 mb-1 header">
+		<div class="px-4 pt-3 mt-0.5 mb-1 header {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}">
 			<div class="flex items-center gap-1 ">
 				<div class="{$showSidebar ? 'md:hidden' : ''} mr-1 self-start flex flex-none items-center">
 					<button
@@ -58,7 +58,7 @@
 			</div>
 		</div>
 
-		<div class="px-4 my-1 ">
+		<div class="px-4 my-1 {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}">
 			<div
 				class="flex scrollbar-none overflow-x-auto w-fit text-center text-sm font-medium rounded-xl bg-transparent/10 p-1"
 			>
@@ -129,13 +129,18 @@
 
 		<hr class="dark:border-gray-850 BckcoLor" />
 
-		<div class="py-1 px-5 flex-1 max-h-full overflow-y-auto BckcoLor ">
+		<div class="py-1 px-5 flex-1 max-h-full overflow-y-auto BckcoLor {$i18n.language === 'ar-BH' ? 'rtl-style' : ''} ">
 			<slot />
 		</div>
 	</div>
 {/if}
 
 <style>
+	  .rtl-style{
+            direction:rtl;
+              text-align:right;
+              flex-direction: row-reverse;
+          }
 	/* Couleur de fond verte très claire pour le composant */
 	.bg-light-green {
 		background-color: rgba(144, 238, 144, 0.1); /* Vert très pâle avec une opacité plus faible */

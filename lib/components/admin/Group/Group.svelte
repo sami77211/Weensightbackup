@@ -754,7 +754,7 @@ onMount(() => {
     height: 150px;
     border-radius: 50%;
     border: 5px solid rgba(22, 140, 119, 0.2);
-    border-top: 5px solid #168c77;
+    border-top: 5px solid #006654;
     animation: spin 2s linear infinite;
     background-color: white;
     display: flex;
@@ -780,12 +780,12 @@ onMount(() => {
     }
     .tag {
         background-color: #9FD5B5;
-        color: #168c77;
+        color: #006654;
         padding: 4px 8px;
         font-size: 16px;
         border-radius: 16px;
         cursor: pointer;
-        border: 1px solid #168c77;
+        border: 1px solid #006654;
     }
     .tag:hover {
         background-color: #e8f5f0;
@@ -810,7 +810,7 @@ onMount(() => {
         padding: 6px 8px;
         font-size: 16px;
         cursor: pointer;
-        color: #168c77;
+        color: #006654;
     }
     .option:hover {
         background-color: #f0f9f7;
@@ -830,7 +830,7 @@ onMount(() => {
       .delete-skill-btn {
   background-color: transparent;
   border: none;
-  color: #168c77;
+  color: #006654;
   font-size: 14px;
   cursor: pointer;
   padding: 0 8px;
@@ -871,7 +871,7 @@ margin-top: 16px;
       margin-bottom: 5px; /* Espace entre le titre et la liste */
     }
 .mini-title {
-      color: #168c77; /* Couleur pour le titre des sections */
+      color: #006654; /* Couleur pour le titre des sections */
       font-weight: 600;
       font-size: 1.2rem;
       margin-bottom: 10px;
@@ -885,13 +885,13 @@ margin-top: 16px;
     font-size: 14px;
     margin: 10px 10px 8px 2px;
     background-color: #f1fdf9; /* Couleur de fond */
-    border: 1px solid #168c77; /* Bordure de 1px, couleur personnalisée et style plein */
+    border: 1px solid #006654; /* Bordure de 1px, couleur personnalisée et style plein */
 }
 
 .field label {
     /*display: block;*/
     font-weight: 600;
-    color: #168c77; /* Couleur plus vive pour le label */
+    color: #006654; /* Couleur plus vive pour le label */
     font-size: 1.1rem;
    /* margin-bottom: 8px; /* Espacement pour une meilleure lisibilité */
 }
@@ -941,8 +941,8 @@ margin-top: 16px;
 
      .custom-bg {
         background-color: #9FD5B5;
-    border: 2px solid #168c77;
-      color: #168c77;
+    border: 2px solid #006654;
+      color: #006654;
       padding: 10px 20px;
       border-radius: 20px;
       cursor: pointer;
@@ -954,10 +954,10 @@ margin-top: 16px;
     background-color: #9FD5C0;
   }
 #validateButton {
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
       padding: 10px 20px;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 20px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -1096,7 +1096,7 @@ margin-top: 16px;
         width: 35px;
         height: 35px;
         background-color: #f1f1f1;
-        border: 1px solid #168c77;
+        border: 1px solid #006654;
         border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.2s, transform 0.1s;
@@ -1128,7 +1128,7 @@ margin-top: 16px;
 
     h1 {
         text-align: center; /* Centrer le titre */
-        color: #168c77; /* Couleur du titre */
+        color: #006654; /* Couleur du titre */
         margin-bottom: 20px; /* Espacement en bas du titre */
     }
 
@@ -1169,7 +1169,7 @@ margin-top: 16px;
     align-items: center;
     padding: 15px;
     border-radius: 8px;
-    border: 1px solid #168c77;
+    border: 1px solid #006654;
     margin-bottom: 15px;
 }
 
@@ -1205,7 +1205,7 @@ margin-top: 16px;
 
    
     .pagination-arrow {
-    background-color: #168c77; /* Fond des boutons de pagination */
+    background-color: #006654; /* Fond des boutons de pagination */
     color: white;
     border: none;
     padding: 5px 10px;
@@ -1222,7 +1222,7 @@ margin-top: 16px;
   }
 
   .pagination-arrow:hover {
-    background-color: #168c77; /* Couleur au survol */
+    background-color: #006654; /* Couleur au survol */
   }
   .chevron {
     transition: transform 0.3s ease;
@@ -1238,7 +1238,7 @@ margin-top: 16px;
         cursor: pointer;
     }
     .bg-color-pag{
-      background-color: #168c77;
+      background-color: #006654;
     }
  
 

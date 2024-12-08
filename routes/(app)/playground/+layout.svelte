@@ -18,7 +18,7 @@
 <div
 	class=" flex flex-col light-green-bg w-full min-h-screen max-h-screen {$showSidebar
 		? 'md:max-w-[calc(100%-260px)]'
-		: ''}"
+		: ''}{$i18n.language === 'ar-BH' ? 'rtl-style' : ''}"
 >
 <div class="px-4 pt-3 mt-0.5 mb-1 header" >
 	<div class="flex items-center gap-1">

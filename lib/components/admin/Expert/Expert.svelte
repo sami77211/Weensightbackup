@@ -29,7 +29,7 @@
   let activeTab = 'SystemPrompts';
 
   interface Theme {
-  label: string;
+  theme_title: string;
   collection: string;
   showConfigList: boolean;
   configList:string[];
@@ -107,7 +107,7 @@ let selectedParams:ExpertParam;
   async function fetchSystemPrompts() {
 
 try {
-      const response = await fetch('http://localhost:3005/api/GetSystemPrompts');
+      const response = await fetch('http://localhost:3010/api/GetSystemPrompts');
       if (!response.ok) throw new Error('Failed to fetch System Prompts');
       const data = await response.json();
       systemPrompts = data.map((item: any) => ({
@@ -122,7 +122,7 @@ try {
   async function fetchLLaVaLLMPrompts() {
 
 try {
-      const response = await fetch('http://localhost:3005/api/GetLLaVaLLMPrompts');
+      const response = await fetch('http://localhost:3010/api/GetLLaVaLLMPrompts');
       if (!response.ok) throw new Error('Failed to fetch LLaVa LLM Prompts');
       const data = await response.json();
       LLaVaLLMPrompts = data.map((item: any) => ({
@@ -137,7 +137,7 @@ try {
   async function fetchThemes() {
 
     try {
-          const response = await fetch('http://localhost:3005/api/themes-with-expert-titles');
+          const response = await fetch('http://localhost:3000/api/themes-with-expert-titles');
           if (!response.ok) throw new Error('Failed to fetch themes');
           const data = await response.json();
           themes = data.map((item: any) => ({
@@ -157,7 +157,7 @@ try {
     // Fetch Expert Parameters based on theme title
 async function fetchExpertParams(titre: string) { // Changer le paramètre de 'paramsTitle' à 'titre'
   try {
-    const response = await fetch('http://localhost:3005/api/find-params-by-title', {
+    const response = await fetch('http://localhost:3000/api/find-params-by-title', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ async function fetchExpertParams(titre: string) { // Changer le paramètre de 'p
 
   async function AddConfig() {
 try {
- const response = await fetch('http://localhost:3005/api/add-params', {
+ const response = await fetch('http://localhost:3000/api/add-params', {
    method: 'POST',
    headers: {
      'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ try {
 }
 async function checkExistenceParams(titre:string, type:string) {
   try {
-    const response = await fetch('http://localhost:3005/api/check-existence-config', {
+    const response = await fetch('http://localhost:3000/api/check-existence-config', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ async function checkExistenceParams(titre:string, type:string) {
 
 async function checkExistencetheme(titre:string) {
   try {
-    const response = await fetch('http://localhost:3005/api/check-existence-theme', {
+    const response = await fetch('http://localhost:3000/api/check-existence-theme', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -300,11 +300,11 @@ async function checkExistencetheme(titre:string) {
 
 async function AddTheme() {
   let themeToAdd: Theme = {
-      label: newTheme, // This should be updated with your input
+    theme_title: newTheme, // This should be updated with your input
       collection: "" // Assign a default value for collection
     };
 try {
- const response = await fetch('http://localhost:3005/api/add-themes', {
+ const response = await fetch('http://localhost:3000/api/add-themes', {
    method: 'POST',
    headers: {
      'Content-Type': 'application/json',
@@ -1656,7 +1656,7 @@ input[type="radio"]:checked {
   color: #4CAF50;
 }
 .message:hover {
-  background-color: #168c77;
+  background-color: #006654;
   color: white;
 }
 .sub-list {
@@ -1721,11 +1721,11 @@ input[type="radio"]:checked {
   align-items: center; /* Centrer le contenu verticalement */
 }
   #validateButton {
-      background-color: #168c77;
+      background-color: #006654;
       color: white;
     /*  width: 100%;*/
       padding: 10px 20px;
-      border: 2px solid #168c77;
+      border: 2px solid #006654;
       border-radius: 20px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -1735,13 +1735,13 @@ input[type="radio"]:checked {
 
     }
   .selected {
-    background-color: #168c77;
+    background-color: #006654;
     color: white;
   }
   .custom-bg {
         background-color: #9FD5B5;
-        border: 2px solid #168c77;
-      color: #168c77;
+        border: 2px solid #006654;
+      color: #006654;
       padding: 10px 20px;
       border-radius: 20px;
       cursor: pointer;
@@ -1806,7 +1806,7 @@ input[type="radio"]:checked {
     transition: background-color 0.3s ease;
   }
   .tab.active {
-    background-color: #168c77;
+    background-color: #006654;
     color: white;
   }
   .tab-content {

@@ -85,7 +85,7 @@
 											<td class=" px-3 py-1 hidden md:flex h-[2.5rem]">
 												<div class="my-auto whitespace-nowrap">
 													{dayjs(memory.updated_at * 1000).format(
-														$i18n.t('MMMM DD, YYYY hh:mm:ss A')
+														$i18n.t('MMMM DD, YYYY h:mm A')
 													)}
 												</div>
 											</td>

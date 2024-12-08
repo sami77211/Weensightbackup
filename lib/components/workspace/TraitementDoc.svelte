@@ -1,18 +1,18 @@
-<script lang="ts">
+<script lang="ts" src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js">
 	import { getContext, onMount, tick } from 'svelte';
 	const i18n = getContext('i18n');
+    import { writable } from 'svelte/store'; 
 	
 	import fileSaver from 'file-saver';
 	  const { saveAs } = fileSaver;
-	  
-	 
-	
-	
 		import { toast } from 'svelte-sonner';
 	import TagChatModal from '../chat/TagChatModal.svelte';
 	import { SUPPORTED_FILE_EXTENSIONS, SUPPORTED_FILE_TYPE } from '$lib/constants';
-	
-	
+    import { PDFDocument } from "pdf-lib";
+
+    let MaxPages;
+    let startpage;
+    let nbr_forsubdev;
 		let isLoading;
 		let tags=[];
 		const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Mo (ajustez selon vos besoins)
@@ -29,13 +29,11 @@
 		let langchain_mode;
 		let successMessage;
 		let CollectionAdded;
-		let selectedCategoryId;
-		
+		let selectedCategoryId;	
 
 		let show;
 		let Files=[];
-		let username = 'dev_user1'; // Nom d'utilisateur par défaut
-		let path='db_dir';
+        let pageCount;
 		interface Collection {
 			id: string;
 			name: string;
@@ -45,31 +43,29 @@
 		let isUploading = false;
 		// Function to handle file selection
 		// Handle file selection and start upload automatically
-		function handleFileSelect(event) {
-			Files = Array.from(event.target.files); // Convert file list to array
-			uploadProgress = 0; // Reset progress
-			isUploading = true; // Start the upload process
-			uploadStarted = true; // Set flag to true as upload started
-		
-	
-			// Simulate file upload with progress
-			const interval = setInterval(() => {
-				if (uploadProgress >= 100) {
-					clearInterval(interval); // Stop when progress reaches 100%
-					isUploading = false; // End uploading state
-				} else {
-					uploadProgress += 10; // Increment progress
-				}
-			}, 300); // Simulate upload speed
-		}
-	
+		async function handleFileSelect(event: Event) {
+		Files = Array.from((event.target as HTMLInputElement).files || []);
+        documentURL=URL.createObjectURL(Files[0]);
+        filepath=filepath+Files[0].name
+		console.log(filepath);
+    	uploadProgress = 0;
+		uploadStarted = true;
+		isUploading = true;
+        const fileBytes = await Files[0].arrayBuffer();
+        const pdfDoc = await PDFDocument.load(fileBytes);
+        pageCount = pdfDoc.getPages().length;
+        console.log(pageCount);
+        
+
+		startUpload();
+	}
+
+
+   // let filepath='d:/Doc/UsecaseExtratcation/';
+let filepath='';
+
 		function handleUploadClick() {
-			if (!selectedCategoryId) {
-				errorMessage = 'Please select a category before uploading files.';
-				toast.error($i18n.t(errorMessage))
-				return; // Prevent further execution
-			
-			}
+
 	
 			// Reset error message and proceed to click the hidden file input
 			errorMessage = '';
@@ -94,95 +90,11 @@
 		}
 	
 	
-		// Async function to fetch categories from the API
-		async function fetchCategories() {
-			try {
-	  // Fetching collections from the API using the provided username
-	  const response = await fetch(`http://20.84.80.6:5000/collections/${user}`, {
-      headers: {
-        'accept': 'application/json'
-      }
-    });
-	
-				if (!response.ok) throw new Error('Error fetching categories');
-	
-				const data = await response.json();
-				Collections = data.map((item: any) => ({
-					id: item._id,
-					name: item,
-					description: item.description || '' 
-				})) as Collection[];
-				console.log(Collections);
-			} catch (error) {
-				console.log('Error fetching categories:', error);
-			}
-		}
-
-
-	let user="dev_user1";	
-	
-		const uploadDoc = async (file: File, tags?: object) => {
-			uploading=true;
-			
-			const formData = new FormData();
-			formData.append('file', file);
-			formData.append('nom', selectedDoc?.nom || '');
-			formData.append('prenom', selectedDoc?.prenom || '');
-	
-			const response = await fetch('http://localhost:3002/documents', {
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${localStorage.token}`,
-				},
-				body: formData,
-			});
-			
-			if (response.ok) {
-				const data = await response.json();
-				
-			} else {
-				const errorData = await response.json();
-				toast.error($i18n.t(`Erreur lors de l'upload: ${errorData.error}`));
-
-			}
-			uploading=false;
-		};
-		const processFile = async (file: File, langchain_mode: string, chunk = true, chunk_size = 512, embed = true) => {
-	 
-	  
-	  const formData = new FormData();
-	  formData.append('file', file);
-	  formData.append('langchain_mode', langchain_mode);
-	  formData.append('chunk', chunk.toString());
-	  formData.append('chunk_size', chunk_size.toString());
-	  formData.append('embed', embed.toString());
-	
-	  const response = await fetch('http://20.84.80.6:5000/process_file/', {
-		method: 'POST',
-		headers: {
-		  Authorization: `Bearer ${localStorage.token}`, // Si vous avez besoin d'un token
-		},
-		body: formData,
-	  });
-	
-	  console.log(response);
-	
-	  if (response.ok) {
-		const data = await response.json();
 		
-	   
-	  
-	
-		return data; // Retourner les données pour une utilisation ultérieure
-	  } else {
-		const errorData = await response.json();
-		toast.error($i18n.t(`Erreur lors du traitement: ${errorData.detail || 'Erreur inconnue'}`));
 
-		throw new Error(errorData.detail || 'Erreur inconnue');
-	  }
-	  
 	
-	};
+    let visibility=true;
+	
 	
 	
 	const submitHandler = async () => {
@@ -226,7 +138,6 @@
 		
 	  }
 	
-	  fetchCategories();
 	  show=false;
 	};
 	
@@ -283,11 +194,8 @@
 					SUPPORTED_FILE_EXTENSIONS.includes(file.name.split('.').at(-1))
 				) {
 					try {
-						//await uploadDoc(file, tags);
-						await processFile(file, selectedCategoryId, chunk, chunk_size, embed);
+						
 	
-						// Affichage du message de succès
-						toast.success($i18n.t(`Fichier '${file.name}' téléchargé avec succès dans la collection !`));
 
 					} catch (error) {
 						// Affichage du message d'erreur si un problème survient
@@ -297,11 +205,7 @@
 					// Gestion des fichiers avec des types non reconnus
 					toast.error($i18n.t(`Type de fichier inconnu '${file['type']}', mais il sera traité comme du texte brut.`));
 					try {
-						// Traiter et télécharger le fichier
-						//await uploadDoc(file, tags);
-						await processFile(file, selectedCategoryId, chunk, chunk_size, embed);
-	
-						toast.success($i18n.t("fileUploadedSuccess", { fileName: file.name }));
+					
 					
 
 						// Indique que le chargement est terminé
@@ -312,9 +216,6 @@
 					}
 				}
 			}
-	
-		
-	
 		} else {
 			// Aucun fichier n'a été sélectionné
 			toast.error($i18n.t(`Aucun fichier sélectionné.`));
@@ -326,40 +227,85 @@
 	
 	
 		onMount(() => {
-			fetchCategories();
+            visibility=true;
+	
 		});
 
 
-		const afficherCVEnPopup = async (nomDocument) => {
+        $: isButtonDisabled = !(
+  pageValues.length === pageCount && // Assure que la liste contient le bon nombre d'éléments
+  pageValues.every(value => value !== undefined && value !== "") // Vérifie que tous les champs sont remplis
+);
+
+function handleProcess() {
+  if (!isButtonDisabled) {
+    console.log("Traitement lancé avec :", { MaxPages, startpage, nbr_forsubdev });
+    // Ajouter votre logique de traitement ici
+  }
+}
+function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64); // Décoder Base64
+    const byteNumbers = new Array(byteCharacters.length).fill().map((_, i) => byteCharacters.charCodeAt(i));
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+}
+
+
+ let traite=false;
+ async function processPdf(filePath, subdivisions) {
+    isLoading = true; // Définir l'état de chargement
+
+    const data = {
+        document_path: filePath,
+        subdivisions: subdivisions,
+    };
+
     try {
-      const response = await fetch(`http://localhost:3002/api/documents/name/${nomDocument}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-   
-      if (response.ok) {
-        const result = await response.json();
-        
-        // Convertir la chaîne base64 en données binaires
-        const caracteresBinaires = atob(result.document);
-        const nombresBinaires = new Array(caracteresBinaires.length);
-        for (let i = 0; i < caracteresBinaires.length; i++) {
-          nombresBinaires[i] = caracteresBinaires.charCodeAt(i);
+        const response = await fetch('http://127.0.0.1:5000/process-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        // Vérifier le statut de la réponse
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
         }
-        const tableauBinaire = new Uint8Array(nombresBinaires);
-        const fichier = new Blob([tableauBinaire], { type: 'application/pdf' });
-        documentURL = URL.createObjectURL(fichier);
-      
-        
-      } else {
-        const erreurData = await response.json();
-        console.error('Échec de récupération du CV :', erreurData.error);
-      }
+
+        // Lire la réponse JSON
+        const responseBody = await response.json();
+
+        // Vérifier si la réponse contient le fichier encodé en base64
+        if (responseBody.file_base64) {
+            // Convertir le fichier encodé en base64 en une URL Blob
+            const pdfBlob = base64ToBlob(responseBody.file_base64, 'application/pdf');
+            documentpdf_traite = URL.createObjectURL(pdfBlob); // Créer une URL Blob pour le PDF
+
+            console.log('Processed PDF Blob URL:', documentpdf_traite);
+        } else {
+            throw new Error('Invalid API response: Base64-encoded PDF missing.');
+        }
+        // Mise à jour des états
+        isLoading = false;
+        traite = true;
     } catch (error) {
-      console.error('Erreur lors de la récupération du CV :', error);
+        console.error('Error processing PDF:', error.message);
+        isLoading = false; // Réinitialiser l'état
     }
-  };
+}
+let documentpdf_traite;
+let documentBase64 = '';  // La chaîne base64 du PDF
+  let documentURLtraite = '';     // L'URL du PDF à afficher dans l'iframe
+  
+ 
+  
+  
+  let pageValues = Array(pageCount).fill(""); // Initialise un tableau vide pour stocker les valeurs
+
 	</script>
+ 
 
 {#if isLoading}
 <div class="loader-overlay">
@@ -370,44 +316,38 @@
   </div>
 </div>
 {/if}
-	
-	
+{#if visibility==false}
+<button
+class="flex space-x-1"
+on:click={() => {
+    visibility=true;
+    pageValues=[];
+	traite=false;
+	filepath="";
+}}
+>
+<div class=" self-center">
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        class="w-4 h-4"
+    >
+        <path
+            fill-rule="evenodd"
+            d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z"
+            clip-rule="evenodd"
+        />
+    </svg>
+</div>
+<div class=" self-center font-medium text-sm">{$i18n.t('Back')}</div>
+</button>
+	{/if}
 	<div class="container {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}">
-		<h2>{$i18n.t('Collections')} </h2>
+		<h2>{$i18n.t('Document proccesing')} </h2>
 	
-		<!-- Select Dropdown -->
-		<div class="select-container ">
-			<select class="select-box"
-			bind:value={selectedCategoryId}
-			placeholder={$i18n.t('Select a collection')}
-			>
-				<!-- Default disabled option -->
-				<option value="" selected disabled>{$i18n.t('Select a collection')}</option>
-				<!-- Loop through Collections and display them as options -->
-				{#each Collections as collection}
-					<option value={collection.name}>{collection.name}</option>
-				{/each}
-			</select>
 		
-			<button
-			class="add-doc-button"
-			style="height: 38px; margin-left: 13px;"
-			aria-label={$i18n.t('Add Collection')}
-			on:click={() => { show = true; }}
-			>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 16 16"
-				fill="currentColor"
-				class="w-4 h-4"
-			>
-				<path
-					d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z"
-				/>
-			</svg>
-			</button>
-		</div>
-	
+	{#if visibility}
 		<!-- Upload Section -->
 		<div class="flex-1 mr-2">
 			<input
@@ -420,6 +360,7 @@
 				on:change={handleFileSelect}
 			/>
 		
+            
 			<!-- Upload button with progress bar -->
 			<button class="upload-area" on:click={handleUploadClick}>
 				<div class="upload-content">
@@ -445,7 +386,7 @@
 								<div style="display: flex; justify-content:center;margin-bottom: 20px;">
 									<img src="/correct.png" alt="Upload Successful" width="40" height="40" />
 								</div>
-								<p style="font-size: 17px; font-weight: bold;">{Files.length} {$i18n.t('File(s) uploaded')}</p>
+								<p style="font-size: 17px; font-weight: bold;">{$i18n.t('Your file has been uploaded successfully')}</p>
 							</div>
 						{/if}
 					{:else}
@@ -455,94 +396,193 @@
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16v4a1 1 0 001 1h16a1 1 0 001-1v-4M16 8l-4-4m0 0L8 8m4-4v12" />
 							</svg>
 						</div>
-						<p>{$i18n.t('Drop Your files Here')}</p>
+						<p>{$i18n.t('Drop Your file Here')}</p>
 						<p class="sub-text">{$i18n.t('Maximum file size 5 MB')}</p>
 					{/if}
 				</div>
 			</button>
 		</div>
-	
+        {/if}
+
+
+        {#if !visibility}
+        <!-- Document display view -->
+
+        <div class="form-container-horizontal">
+            <div class="input-list-container">
+                <div class="form-label">
+					{$i18n.t('Put subdivision number for each page:')}
+                  </div>
+              <div class="input-list">   
+                {#each Array(pageCount) as _, index}
+                  <div class="form-group">
+                    <label for={`page-input-${index + 1}`} class="input-label">
+                      {index + 1}
+                    </label>
+                    <input
+                      type="number"
+                      id={`page-input-${index + 1}`}
+                      class="input-field"
+                      bind:value={pageValues[index]}
+                      placeholder={index + 1}
+                    />
+                  </div>
+                {/each}
+              </div>
+            </div>
+          
+            <button
+              class="process-button"
+              on:click={() => processPdf(filepath,pageValues)}
+              disabled={isButtonDisabled}
+            >{$i18n.t('Execute')}
+              <img src="/settings_weensight.png" alt="Settings" class="button-icon" />
+            </button>
+          </div>
+          
+          
+  
+        <div class="document-view">
+          <!-- Display selected document -->
+          {#if documentURL}
+          {#if traite}
+		  <div class="iframe-container">
+			<div style="text-align: center;">
+			<h2>{$i18n.t('Treated Document')}</h2>
+		</div>
+			<iframe
+			  src={documentpdf_traite}
+			  style="width: 100%; height: 600px; border: none;"
+			  title="Document Viewer"
+			></iframe>
+		  </div>
+            {:else}
+            <div class="iframe-container">
+                <iframe
+                  src={documentURL}
+                  style="width: 100%; height: 600px; border: none;"
+                  title="Document Viewer"
+                ></iframe>
+              </div>
+            {/if}
+          {:else}
+            <p>{$i18n.t('No document selected for viewing')}</p>
+          {/if}
+        </div>
+        {/if}
+        
+        {#if visibility}
 		<!-- Save button -->
 		<div class="flex justify-end pt-3 text-sm font-medium" style="margin-top: 15px;">
 			<button
 			class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
 			type="submit"
 			on:click={() => {
-			
-			if(selectedCategoryId!=''){
+
 				if (Files.length === 0) {
-					console.log(selectedCategoryId);
-					
 					toast.error($i18n.t("please upload at least one file"));
 
 				} else {
-					Enregistrer();
+					visibility=false;
+                  
 				}
-			}
-			else{
-				toast.error($i18n.t("please select a collection"));
-
-			}
+			
 			}}
 		>
-			{$i18n.t('Save')}
+        {#if visibility}
+			{$i18n.t('Next')}
+            {:else}
+            {$i18n.t('procces')}
+            {/if}
 		</button>
 		
 		</div>
+        {/if}
 	</div>
-	
-	{#if show == true}
-	<div class="fixed inset-0 bg-opacity-10 items-center z-50" style="background-color: var(--color-gray-800, #33333394); justify-content: center;">
-		<div class="bg-white rounded-lg shadow-lg w-96 {$i18n.language === 'ar-BH' ? 'rtl-style' : ''}" style="width: 500px; margin-left: 150px;">
-			<div class="flex justify-between p-4 border-b">
-				<div class="font-medium" style="display: flex; text-align: center; align-items: center;">
-					{$i18n.t('Add a Collection')}
-				</div>
-				<button on:click={() => (show = false)} class="text-gray-600 hover:text-gray-800 text-xl p-1">
-					&times; 
-				</button>
-			</div>
-			<div class="p-4">
-				<label for="category-name" class="block mb-2 ">{$i18n.t('Name of collection')}</label>
-				<input
-					id="category-name"
-					type="text"
-					bind:value={CollectionAdded}
-					class="border rounded-lg w-full p-2 mb-4"
-					placeholder={$i18n.t('Enter the collection name')}
-				/>
-				<div class="flex justify-end">
-					<button
-						on:click={() => {
-							if (CollectionAdded === undefined || CollectionAdded === "") {
-								toast.error($i18n.t("Please enter a Collection Name"), "error");
-
-							} else {
-								submitHandler();
-								addNewLangchainMode(username, CollectionAdded, path);
-								toast.success($i18n.t("Collection added successfully!"), "success");
-
-							}
-						}}
-						class="bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 px-4 rounded"
-						style="border-radius: 17px;"
-					>
-						{$i18n.t('Save')}
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	{/if}
-
-
-	
-	
-	
-	
-	
-	
 		<style>
+			.iframe-container h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #168c77; /* Utilisation d'une couleur adaptée à votre projet */
+}
+
+
+.button-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    margin-left: 10px;
+  }
+              .process-button {
+                display: flex;
+                margin-top: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #9fd5b5;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    align-self: center;
+  }
+
+  .process-button:disabled {
+    background-color: #9fd5b5;
+    cursor: not-allowed;
+  }
+
+  .process-button:hover:not(:disabled) {
+    background-color: #9fd5b5;
+    box-shadow: 0 4px 8px rgba(22, 140, 119, 0.2);
+  }
+
+.form-container-horizontal {
+   
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: #f5fdf9;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #9fd5b5;
+    max-width: 100%;
+    margin-bottom: 15px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-group label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #168c77;
+    margin-bottom: 8px;
+  }
+
+  .input-field {
+    width: 200px;
+    padding: 10px 16px;
+    border: 2px solid #9fd5b5;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #168c77;
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .input-field:focus {
+    border-color: #168c77;
+    box-shadow: 0 0 8px rgba(22, 140, 119, 0.3);
+  }
 
 .loader-overlay {
     position: fixed;
@@ -864,8 +904,97 @@
     100% { transform: rotate(360deg); }
 }
 
+
+  /* Conteneur principal */
+  .form-container-horizontal {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  /* Conteneur de la liste d'inputs */
+  .input-list-container {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    overflow-x: auto; /* Défilement horizontal si nécessaire */
+    white-space: nowrap; /* Empêche les inputs de passer à la ligne */
+  }
+
+  /* Liste des inputs */
+  .input-list {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem; /* Espacement entre les inputs */
+    justify-content: flex-start;
+  }
+
+  /* Groupe de formulaire */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Label des inputs */
+  .input-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+    color: #555;
+  }
+
+  /* Style des inputs */
+  .input-field {
+    width: 50px;
+    padding: 0.2rem;
+    font-size: 0.9rem;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  /* Bouton */
+  .process-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    color: white;
+    background-color: #9fd5b5;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .process-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  .process-button:hover:not(:disabled) {
+    background-color: #9fd5b5;
+  }
+
+  .button-icon {
+    width: 20px;
+    height: 20px;
+  }
 	
 	
-	
+   /* Label général */
+   .form-label {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #333;
+    text-align: center;
+  }
 			
 		</style>

@@ -25,7 +25,7 @@
 					{:else}
 							<Pagination.Page
 								{page}
-								class="inline-flex size-8 items-center justify-center rounded-[9px] bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium hover:bg-dark-10 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent data-[selected]:bg-[#168c77] data-[selected]:text-gray-100 data-[selected]:hover:bg-black dark:data-[selected]:bg-white dark:data-[selected]:text-gray-900 dark:data-[selected]:hover:bg-white pagination"
+								class="inline-flex size-8 items-center justify-center rounded-[9px] bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium hover:bg-dark-10 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent data-[selected]:bg-[#006654] data-[selected]:text-gray-100 data-[selected]:hover:bg-black dark:data-[selected]:bg-white dark:data-[selected]:text-gray-900 dark:data-[selected]:hover:bg-white pagination"
 							>
 								{page.value}
 							</Pagination.Page>
@@ -41,17 +41,18 @@
 	</Pagination.Root>
 </div>
 <style>
+	
 .pagination {
-    background-color: #168c77; /* Apply dark green color to the pagination */
+    background-color: #006654; /* Apply dark green color to the pagination */
 }
 
 .pagination-page {
-    background-color: #168c77; /* Apply dark green to each page button */
+    background-color: #006654; /* Apply dark green to each page button */
     color: white; /* Change the text color if needed */
 }
 
 .pagination-next {
-    background-color: #168c77; /* Apply dark green to the next button */
+    background-color: #006654; /* Apply dark green to the next button */
     color: white; /* Change the text color if needed */
 }
 
